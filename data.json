@@ -1,0 +1,264 @@
+[
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_1",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET571",
+      "AR": "1",
+      "EN": "1",
+      "ID": "1"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_2",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET441",
+      "AR": "2",
+      "EN": "2",
+      "ID": "2"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_3",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET100",
+      "AR": "3",
+      "EN": "3",
+      "ID": "3"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_4",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET223",
+      "AR": "4",
+      "EN": "4",
+      "ID": "4"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_5",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET332",
+      "AR": "5",
+      "EN": "5",
+      "ID": "5"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_6",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET144",
+      "AR": "6",
+      "EN": "6",
+      "ID": "6"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_7",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET571",
+      "AR": "7",
+      "EN": "7",
+      "ID": "7"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_8",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET441",
+      "AR": "8",
+      "EN": "8",
+      "ID": "8"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_9",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET100",
+      "AR": "9",
+      "EN": "9",
+      "ID": "9"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_10",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET223",
+      "AR": "10",
+      "EN": "10",
+      "ID": "10"
+    }
+  },
+  {
+    "group": "nodes",
+    "data": {
+      "id": "hash_11",
+      "ETAr": "هاتف محمول",
+      "ETEn": "Mobile Device",
+      "ETCode": "AET332",
+      "AR": "11",
+      "EN": "11",
+      "ID": "11"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_12",
+      "source": "hash_1",
+      "target": "hash_2",
+      "AR": "اتصال بلوتوث",
+      "EN": "Bluetooth Connection",
+      "RTAr": "اتصال بلوتوث",
+      "RTEn": "Bluetooth Connection",
+      "RTCode": "RET001"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_13",
+      "source": "hash_1",
+      "target": "hash_3",
+      "AR": "اتصال واي فاي",
+      "EN": "WiFi Connection",
+      "RTAr": "اتصال واي فاي",
+      "RTEn": "WiFi Connection",
+      "RTCode": "RET002"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_14",
+      "source": "hash_1",
+      "target": "hash_4",
+      "AR": "اتصال واي فاي",
+      "EN": "WiFi Connection",
+      "RTAr": "اتصال واي فاي",
+      "RTEn": "WiFi Connection",
+      "RTCode": "RET002"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_15",
+      "source": "hash_4",
+      "target": "hash_5",
+      "AR": "اتصال NFC",
+      "EN": "NFC Connection",
+      "RTAr": "اتصال NFC",
+      "RTEn": "NFC Connection",
+      "RTCode": "RET003"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_16",
+      "source": "hash_5",
+      "target": "hash_6",
+      "AR": "اتصال واي فاي",
+      "EN": "WiFi Connection",
+      "RTAr": "اتصال واي فاي",
+      "RTEn": "WiFi Connection",
+      "RTCode": "RET002"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_17",
+      "source": "hash_6",
+      "target": "hash_7",
+      "AR": "اتصال بلوتوث",
+      "EN": "Bluetooth Connection",
+      "RTAr": "اتصال بلوتوث",
+      "RTEn": "Bluetooth Connection",
+      "RTCode": "RET001"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_18",
+      "source": "hash_7",
+      "target": "hash_8",
+      "AR": "اتصال واي فاي",
+      "EN": "WiFi Connection",
+      "RTAr": "اتصال واي فاي",
+      "RTEn": "WiFi Connection",
+      "RTCode": "RET002"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_19",
+      "source": "hash_7",
+      "target": "hash_9",
+      "AR": "اتصال واي فاي",
+      "EN": "WiFi Connection",
+      "RTAr": "اتصال واي فاي",
+      "RTEn": "WiFi Connection",
+      "RTCode": "RET002"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_20",
+      "source": "hash_7",
+      "target": "hash_10",
+      "AR": "اتصال بلوتوث",
+      "EN": "Bluetooth Connection",
+      "RTAr": "اتصال بلوتوث",
+      "RTEn": "Bluetooth Connection",
+      "RTCode": "RET001"
+    }
+  },
+  {
+    "group": "edges",
+    "data": {
+      "id": "e_21",
+      "source": "hash_7",
+      "target": "hash_11",
+      "AR": "اتصال NFC",
+      "EN": "NFC Connection",
+      "RTAr": "اتصال NFC",
+      "RTEn": "NFC Connection",
+      "RTCode": "RET003"
+    }
+  }
+]

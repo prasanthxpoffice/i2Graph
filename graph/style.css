@@ -1,0 +1,136 @@
+/* Custom styles */
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      #cy {
+        width: 100%;
+        height: 100%;
+        background-color: #f9fafb; /* light gray bg */
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+      }
+
+      /* Sidebar panels */
+      .panel {
+        z-index: 10;
+        position: absolute;
+        top: 1.25rem; /* 20px */
+        width: 300px;
+        max-height: calc(100vh - 40px);
+        background-color: white;
+        border-radius: 0.5rem; /* 8px */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease-in-out;
+      }
+      #left-panel {
+        left: 1.25rem; /* 20px */
+      }
+      #right-panel {
+        right: 1.25rem; /* 20px */
+      }
+      .panel-hidden {
+        transform: translateX(-100%); /* Hide left panel relative to its width */
+      }
+      #right-panel.panel-hidden {
+        transform: translateX(100%); /* Hide right panel relative to its width */
+      }
+
+      /* Panel toggle buttons */
+      .panel-toggle {
+        z-index: 30; /* Above panels (10) but below loader (50) */
+        position: absolute;
+        top: 1.25rem; /* 20px */
+        width: 30px;
+        height: 40px;
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #left-toggle {
+        left: 1.25rem; /* 20px */
+        border-radius: 0 0.5rem 0.5rem 0;
+        transform: none; /* Keep fixed; avoid viewport-dependent shifts */
+      }
+      #right-toggle {
+        right: 1.25rem; /* 20px */
+        border-radius: 0.5rem 0 0 0.5rem;
+        transform: none; /* Keep fixed; avoid viewport-dependent shifts */
+      }
+
+      /* Cytoscape element styling */
+      .faded {
+        opacity: 0.25;
+        transition: opacity 0.2s ease-in-out;
+      }
+      .highlighted {
+        background-color: #0ea5e9; /* sky-500 */
+        border-color: #0284c7; /* sky-600 */
+        border-width: 2px;
+        z-index: 99;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+
+      /* Pathfinding styles */
+      .path-start {
+        background-color: #10b981; /* emerald-500 */
+        border-color: #059669; /* emerald-600 */
+        border-width: 3px;
+        shape: star;
+      }
+      .path-end {
+        background-color: #ef4444; /* red-500 */
+        border-color: #dc2626; /* red-600 */
+        border-width: 3px;
+        shape: diamond;
+      }
+      .path-node {
+        background-color: #f59e0b; /* amber-500 */
+        border-color: #d97706; /* amber-600 */
+        border-width: 2px;
+      }
+      .path-edge {
+        line-color: #f59e0b; /* amber-500 */
+        width: 4px;
+      }
+
+      /* Scrollbar styling */
+      .panel-content::-webkit-scrollbar {
+        width: 6px;
+      }
+      .panel-content::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; /* cool-gray-300 */
+        border-radius: 3px;
+      }
+      .panel-content::-webkit-scrollbar-track {
+        background-color: #f1f5f9; /* cool-gray-100 */
+      }
+      pre::-webkit-scrollbar {
+        height: 6px;
+      }
+      pre::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 3px;
+      }
+
+      /* Legend Styles */
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+      .legend-color {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        border: 1px solid #94a3b8;
+      }

@@ -1,0 +1,11 @@
+{
+  "types": {
+    "default": { "label": "Other", "color": "#cccccc", "borderColor": "#999999" },
+    "AET571": { "label": "AET571 Node", "color": "#3b82f6", "borderColor": "#2563eb" },
+    "AET441": { "label": "AET441 Node", "color": "#10b981", "borderColor": "#059669" },
+    "AET100": { "label": "AET100 Node", "color": "#f59e0b", "borderColor": "#d97706" },
+    "AET223": { "label": "AET223 Node", "color": "#8b5cf6", "borderColor": "#7c3aed" },
+    "AET332": { "label": "AET332 Node", "color": "#ef4444", "borderColor": "#dc2626" },
+    "AET144": { "label": "AET144 Node", "color": "#06b6d4", "borderColor": "#0891b2" }
+  }
+}

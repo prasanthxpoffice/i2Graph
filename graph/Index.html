@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Graph Prototype (Checkpoint 9)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Cytoscape.js Core -->
+    <!-- Scripts are blocking to ensure load order -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+
+    <!-- Layout Dependencies + Extensions (order matters) -->
+    <!-- Dagre dependency -->
+    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+    <!-- Cytoscape Dagre extension -->
+    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+    <!-- Klay dependency -->
+    <script src="https://unpkg.com/klayjs@0.4.1/klay.js"></script>
+    <!-- Cytoscape Klay extension -->
+    <script src="https://unpkg.com/cytoscape-klay@3.1.4/cytoscape-klay.js"></script>
+
+    <!-- Context Menu Extension -->
+    <script src="https://unpkg.com/cytoscape-cxtmenu@3.5.0/cytoscape-cxtmenu.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+    <!-- Fake API shim (development) -->
+    <script src="../fakeapi.js"></script>
+    <!-- App modules -->
+    <script src="js/config.js"></script>
+    <script src="js/transform.js"></script>
+    <script src="js/indexes.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/graph.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+  </head>
+  <body class="bg-gray-100 m-0 p-0 overflow-hidden">
+    <!-- Cytoscape Container -->
+    <div id="cy"></div>
+
+    <!-- Loading Spinner -->
+    <div
+      id="loader"
+      class="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm hidden"
+    >
+      <svg
+        class="animate-spin h-10 w-10 text-sky-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    </div>
+
+    <!-- Status Message -->
+    <div
+      id="status-message"
+      class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 bg-gray-900 text-white text-sm py-2 px-4 rounded-md shadow-lg opacity-0 transition-opacity duration-300"
+    >
+      Status Message
+    </div>
+
+    <!-- Left Panel (Controls) -->
+    <div id="left-panel" class="panel">
+      <div class="p-4 border-b border-gray-200">
+        <h2 class="text-lg font-bold text-gray-800">Graph Controls</h2>
+      </div>
+      <div class="panel-content p-4 space-y-4 overflow-y-auto">
+        <!-- Search Form -->
+        <form id="search-form" class="space-y-3">
+          <div class="font-semibold text-gray-700 text-sm">Search Filters</div>
+
+          <!-- Filter Container -->
+          <div id="filter-container" class="space-y-2">
+            <!-- Initial Filter Group -->
+            <div class="filter-group p-2 border border-gray-200 rounded-md space-y-2 relative">
+              <div class="flex space-x-2">
+                <input
+                  type="text"
+                  name="entityType"
+                  placeholder="Entity Type (e.g., AET571)"
+                  value="AET571"
+                  class="w-1/3 p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                />
+                <select
+                  name="direction"
+                  class="w-1/3 p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                >
+                  <option value="both">Both</option>
+                  <option value="out">Outbound</option>
+                  <option value="in">Inbound</option>
+                </select>
+                <select
+                  name="match"
+                  class="w-1/3 p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                  title="Match mode"
+                >
+                  <option value="exact" selected>Exact</option>
+                  <option value="contains">Contains</option>
+                </select>
+              </div>
+              <input type="text" name="values" placeholder="Values (comma-sep)" value="1" class="w-full p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500" />
+              <button type="button" class="remove-filter-btn absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold" title="Remove this filter">&times;</button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="add-filter-btn"
+            class="w-full py-1.5 px-3 text-sm font-medium text-sky-600 bg-sky-50 rounded-md border border-sky-200 hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+          >
+            + Add Filter
+          </button>
+
+          <button
+            type="submit"
+            id="search-btn"
+            class="w-full py-2 px-4 text-sm font-semibold text-white bg-sky-600 rounded-md shadow-sm hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+          >
+            Search Graph
+          </button>
+
+          <!-- Depth (moved below Search button) -->
+          <div class="mt-3">
+            <label for="depth" class="block text-sm font-medium text-gray-700">Search Depth</label>
+            <input
+              type="number"
+              id="depth"
+              name="depth"
+              value="2"
+              min="1"
+              max="10"
+              class="mt-1 w-full p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+
+          <!-- Batch Size (applies to search and expansion) -->
+          <div class="mt-3">
+            <label for="batch-size" class="block text-sm font-medium text-gray-700">Batch Size</label>
+            <input
+              type="number"
+              id="batch-size"
+              name="batch-size"
+              value="200"
+              min="1"
+              max="500"
+              class="mt-1 w-full p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+        </form>
+
+        <hr class="border-gray-200" />
+
+        <!-- Graph Actions -->
+        <div class="space-y-3">
+          <div class="font-semibold text-gray-700 text-sm">Graph Actions</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              id="clear-graph-btn"
+              class="py-2 px-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-md border border-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+              Clear
+            </button>
+            <button
+              id="save-png-btn"
+              class="py-2 px-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-md border border-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+              Save PNG
+            </button>
+          </div>
+          <button
+            id="find-path-btn"
+            class="w-full py-2 px-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-md border border-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+          >
+            Find Path
+          </button>
+        </div>
+
+        <hr class="border-gray-200" />
+
+        <!-- Hub Finder -->
+        <div class="space-y-2">
+          <div class="font-semibold text-gray-700 text-sm">Hub Finder</div>
+          <div class="flex space-x-2">
+            <input
+              type="number"
+              id="hub-threshold"
+              value="3"
+              min="1"
+              class="w-1/2 p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+              placeholder="Min Degree"
+            />
+            <button
+              id="find-hubs-btn"
+              class="w-1/2 py-1.5 px-3 text-sm font-medium text-white bg-sky-600 rounded-md shadow-sm hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+            >
+              Find Hubs
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel (Details) -->
+    <div id="right-panel" class="panel">
+      <div
+        class="p-4 border-b border-gray-200 flex justify-between items-center"
+      >
+        <h2 class="text-lg font-bold text-gray-800">Details & Key</h2>
+        <select
+          id="language-select"
+          class="p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+        >
+          <option value="EN">English</option>
+          <option value="AR">Arabic (AR)</option>
+        </select>
+      </div>
+      <div class="panel-content p-4 overflow-y-auto space-y-3">
+        <!-- Node Search -->
+        <div class="space-y-1">
+          <label
+            for="node-search"
+            class="block text-sm font-medium text-gray-700"
+            >Search Nodes</label
+          >
+          <input
+            type="text"
+            id="node-search"
+            placeholder="Search ID, EN, AR..."
+            class="w-full p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+          />
+        </div>
+        <hr class="border-gray-200" />
+
+        <!-- Layouts -->
+        <div class="space-y-2">
+          <div class="font-semibold text-gray-700 text-sm">Layouts</div>
+          <label class="flex items-center space-x-2 text-xs text-gray-600">
+            <input
+              id="layout-animate"
+              type="checkbox"
+              class="rounded border-gray-300"
+              checked
+            />
+            <span>Animate layouts</span>
+          </label>
+          <div class="space-y-1">
+            <label for="layout-select" class="block text-xs text-gray-600"
+              >Choose layout</label
+            >
+            <select
+              id="layout-select"
+              class="w-full p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+            >
+              <option value="cose">Organic (cose)</option>
+              <option value="grid">Grid</option>
+              <option value="circle">Circle</option>
+              <option value="concentric">Concentric</option>
+              <option value="breadthfirst">Breadthfirst</option>
+              <option value="random">Random</option>
+              <option value="preset">Preset</option>
+              <option value="dagre">Hierarchical (dagre)</option>
+              <option value="klay">Klay</option>
+            </select>
+          </div>
+        </div>
+        <hr class="border-gray-200" />
+
+        <!-- Legends/Key Section (Dynamic) -->
+        <div class="space-y-2">
+          <div class="font-semibold text-gray-700 text-sm">Legend / Key</div>
+          <div id="legend-container" class="text-xs space-y-1"></div>
+        </div>
+        <hr class="border-gray-200" />
+
+        <!-- Details Content -->
+        <div id="details-content" class="text-sm text-gray-600 break-words">
+          Click a node to see its details.
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Toggles -->
+    <div id="left-toggle" class="panel-toggle">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-5 h-5 text-gray-600"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15.75 19.5 8.25 12l7.5-7.5"
+        />
+      </svg>
+    </div>
+    <div id="right-toggle" class="panel-toggle">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-5 h-5 text-gray-600"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="m8.25 4.5 7.5 7.5-7.5 7.5"
+        />
+      </svg>
+    </div>
+
+    <!-- Main Application Logic -->
+    
+  </body>
+</html>
