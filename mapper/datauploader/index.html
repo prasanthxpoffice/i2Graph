@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSV Data Uploader</title>
+    <style>
+      :root { --bg:#ffffff; --panel:#f8fafc; --text:#0f172a; --muted:#64748b; --accent:#16a34a; --border:#e5e7eb; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+      .wrap { display: flex; flex-direction: column; height: 100%; }
+      header { padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+      .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background:#ffffff; border:1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--muted); }
+      input[type="file"] { color: var(--text); }
+      select, input[type="checkbox"] { accent-color: var(--accent); }
+      .stats { text-align: right; font-size: 12px; color: var(--muted); }
+      .grid { position: relative; flex: 1; overflow: auto; background: #fff; }
+      .table { position: relative; min-width: 600px; }
+      .thead { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--border); }
+      .row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(120px, 1fr); align-items: center; height: 30px; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; }
+      .cell { padding: 0 10px; overflow: hidden; text-overflow: ellipsis; }
+      .thead .cell { font-weight: 600; color: #334155; }
+      .spacer { position: relative; height: 0; }
+      .status { padding: 6px 10px; font-size: 12px; color: var(--muted); }
+      .hidden { display: none !important; }
+      .progress { height: 4px; background: var(--panel); border-top: 1px solid var(--border); }
+      .bar { height: 100%; width: 0%; background: linear-gradient(90deg, #16a34a, #22c55e); transition: width .15s linear; }
+      .hint { font-size: 12px; color: var(--muted); padding-left: 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="controls">
+          <label class="pill">
+            <span>CSV file</span>
+            <input id="fileInput" type="file" accept=".csv,text/csv" />
+          </label>
+          <label class="pill">Delimiter
+            <select id="delimiter">
+              <option value="auto" selected>Auto</option>
+              <option value="," >Comma (,)</option>
+              <option value="\t">Tab (\t)</option>
+              <option value=";">Semicolon (;)</option>
+              <option value="|">Pipe (|)</option>
+            </select>
+          </label>
+          <label class="pill" title="First row contains column names">
+            <input id="hasHeader" type="checkbox" checked />
+            <span>Header row</span>
+          </label>
+          <span class="hint">Large files are parsed in a web worker and rendered with virtual scrolling.</span>
+        </div>
+        <div class="stats">
+          <div id="meta">Waiting for file…</div>
+        </div>
+      </header>
+      <div class="progress" id="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="grid" id="grid" role="table" aria-colcount="0" aria-rowcount="0">
+        <div class="table" id="table">
+          <div class="thead row" id="thead"></div>
+          <div class="spacer" id="spacerTop"></div>
+          <div id="rows"></div>
+          <div class="spacer" id="spacerBottom"></div>
+        </div>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+  </html>

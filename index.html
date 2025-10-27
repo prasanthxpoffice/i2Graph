@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mapper</title>
+    <style>
+      :root { --bg:#ffffff; --panel:#f8fafc; --muted:#64748b; --text:#0f172a; --accent:#16a34a; --border:#e5e7eb; --hover:#eef2f7; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+      .layout { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 56px 1fr; height: 100%; }
+      header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
+      header h1 { font-size: 18px; margin: 0; font-weight: 700; }
+      header .sub { color: var(--muted); font-size: 12px; }
+      aside { border-right: 1px solid var(--border); background: var(--panel); padding: 10px; overflow: auto; }
+      .nav { display: flex; flex-direction: column; gap: 6px; }
+      .nav .section { margin: 10px 8px 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+      .link { display: flex; align-items: center; gap: 8px; padding: 10px 12px; color: var(--text); text-decoration: none; border-radius: 8px; border: 1px solid transparent; }
+      .link:hover { background: var(--hover); border-color: var(--border); }
+      .link.active { background: rgba(22,163,74,0.10); border-color: rgba(22,163,74,0.35); }
+      .link .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); }
+      .link.active .dot { background: var(--accent); }
+      main { position: relative; overflow: hidden; }
+      #content { position: absolute; inset: 0; border: 0; width: 100%; height: 100%; background: #ffffff; }
+      .hint { color: var(--muted); font-size: 12px; margin-left: auto; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <header>
+        <h1>Mapper</h1>
+        <span class="sub">Tools for preparing and loading data</span>
+        <span class="hint">Use the sidebar to open a tool</span>
+      </header>
+      <aside>
+        <div class="nav" id="nav">
+          <div class="section">Data</div>
+          <a href="#/datauploader" data-route="datauploader" class="link">
+            <span class="dot"></span>
+            <span>Data Uploader (CSV)</span>
+          </a>
+          <div class="section">Graph</div>
+          <a href="#/graph" data-route="graph" class="link">
+            <span class="dot"></span>
+            <span>Graph Viewer</span>
+          </a>
+        </div>
+      </aside>
+      <main>
+        <iframe id="content" title="Content"></iframe>
+      </main>
+    </div>
+    <script>
+      (function(){
+        const routes = {
+          datauploader: 'mapper/datauploader/index.html',
+          graph: 'graph/Index.html'
+        };
+        const frame = document.getElementById('content');
+        const nav = document.getElementById('nav');
+
+        function setActive(route){
+          nav.querySelectorAll('.link').forEach(a => {
+            a.classList.toggle('active', a.dataset.route === route);
+          });
+        }
+
+        function loadRoute(route){
+          const url = routes[route] || routes.datauploader;
+          frame.src = url;
+          setActive(route in routes ? route : 'datauploader');
+        }
+
+        function currentRoute(){
+          const h = location.hash || '#/datauploader';
+          const m = h.match(/^#\/(\w+)/);
+          return m ? m[1] : 'datauploader';
+        }
+
+        window.addEventListener('hashchange', () => loadRoute(currentRoute()));
+        // Initialize
+        if (!location.hash) location.hash = '#/datauploader';
+        loadRoute(currentRoute());
+      })();
+    </script>
+  </body>
+  </html>
