@@ -5,7 +5,7 @@
 
   async function loadData() {
     if (cache) return cache;
-    const res = await fetch('../data.json');
+    const res = await fetch('/data.json', { cache: 'no-store' });
     const json = await res.json();
     cache = Array.isArray(json) ? json : [];
     return cache;

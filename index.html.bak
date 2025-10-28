@@ -1,0 +1,42 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mapper</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/libraries/jquery-ui/jquery-ui-1.13.3.min.css">
+    <link rel="stylesheet" href="/libraries/free-jqgrid/css/ui.jqgrid.min.css">
+    <link rel="stylesheet" href="/css/site.css">
+  </head>
+  <body>
+    <div class="layout">
+      <header>
+        <h1>Mapper</h1>
+        <span class="sub">Tools for preparing and loading data</span>
+        <span class="hint">Use the sidebar to open a tool</span>
+      </header>
+      <aside>
+        <div class="nav" id="nav">
+          <div class="section">Data</div>
+          <a href="mapper/datauploader/index.html" class="link">
+            <span class="dot"></span>
+            <span>Data Uploader (CSV)</span>
+          </a>
+          <div class="section">Graph</div>
+          <a href="graph/Index.html" class="link">
+            <span class="dot"></span>
+            <span>Graph Viewer</span>
+          </a>
+        </div>
+      </aside>
+      <main></main>
+    </div>
+    <script src="/libraries/jquery/jquery-3.7.1.min.js"></script>
+    <script src="/libraries/jquery-ui/jquery-ui-1.13.3.min.js"></script>
+    <script src="/libraries/free-jqgrid/js/jquery.jqgrid.min.js"></script>
+    
+  </body>
+  </html>
+
+

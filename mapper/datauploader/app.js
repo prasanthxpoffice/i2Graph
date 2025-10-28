@@ -4,32 +4,27 @@
   const hasHeaderChk = document.getElementById('hasHeader');
   const metaEl = document.getElementById('meta');
   const statusEl = document.getElementById('status');
-  const gridEl = document.getElementById('grid');
-  const theadEl = document.getElementById('thead');
-  const rowsEl = document.getElementById('rows');
-  const spacerTop = document.getElementById('spacerTop');
-  const spacerBottom = document.getElementById('spacerBottom');
   const progress = document.getElementById('progress');
   const progressBar = document.getElementById('progressBar');
+  // jqGrid handles
+  const jq = (typeof window !== 'undefined' && window.jQuery) ? window.jQuery : null;
+  const jqGridSel = '#jqgrid';
+  const jqPagerSel = '#jqgridPager';
+  let jqHeaders = [];
+  let jqKeys = [];
+  let jqData = [];
+  const jqReady = !!(jq && jq.fn && jq.fn.jqGrid);
 
   let worker = null;
   let headers = [];
-  let rows = [];
-  let rowHeight = 30; // px (matches CSS)
-  const overscan = 10; // extra rows above/below viewport
-  let lastRenderRange = [-1, -1];
-  let raf = 0;
 
   function resetGrid() {
     headers = [];
-    rows = [];
-    theadEl.innerHTML = '';
-    rowsEl.innerHTML = '';
-    spacerTop.style.height = '0px';
-    spacerBottom.style.height = '0px';
-    gridEl.setAttribute('aria-colcount', '0');
-    gridEl.setAttribute('aria-rowcount', '0');
-    lastRenderRange = [-1, -1];
+    jqHeaders = [];
+    jqData = [];
+    if (jqReady) {
+      try { jq(jqGridSel).jqGrid('clearGridData', true); } catch (e) {}
+    }
   }
 
   function formatNumber(n) {
@@ -44,74 +39,98 @@
     progressBar.style.width = Math.max(0, Math.min(100, pct)) + '%';
   }
 
-  function buildHeader(cols) {
-    theadEl.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    cols.forEach((name) => {
-      const c = document.createElement('div');
-      c.className = 'cell';
-      c.textContent = name;
-      frag.appendChild(c);
+  
+
+  function makeFieldKey(name, idx) {
+    const base = String(name || ('C' + (idx + 1))).trim();
+    let key = base.normalize ? base.normalize('NFKD') : base;
+    key = key.replace(/[^\w]+/g, '_');
+    if (!key || /^\d/.test(key)) key = 'C' + (idx + 1) + (key ? '_' + key : '');
+    return key;
+  }
+
+  function createColModelFromHeaders(cols) {
+    jqKeys = (cols || []).map((name, idx) => makeFieldKey(name, idx));
+    return jqKeys.map((key, idx) => ({
+      name: key,
+      label: String((jqHeaders[idx] != null ? jqHeaders[idx] : key)),
+      index: key,
+      align: 'left',
+      sortable: true,
+      search: true,
+      width: 120
+    }));
+  }
+
+  function ensureJqGrid(headersForCols) {
+    if (!jqReady) { setStatus('jqGrid library not loaded.'); return; }
+    const colModel = createColModelFromHeaders(headersForCols);
+    try { jq(jqGridSel).jqGrid('GridUnload'); } catch (e) { /* ignore */ }
+    jq(jqGridSel).jqGrid({
+      datatype: 'local',
+      data: jqData,
+      colModel,
+      height: 'auto',
+      shrinkToFit: true,
+      rowNum: 20,
+      rowList: [20,50,100,200],
+      pager: jqPagerSel,
+      viewrecords: true,
+      autowidth: true,
+      guiStyle: 'jQueryUI',
+      iconSet: 'jQueryUI',
+      jsonReader: { repeatitems: false, id: 'id' }
     });
-    theadEl.appendChild(frag);
+    jq(jqGridSel).jqGrid('filterToolbar', { defaultSearch: 'cn', searchOnEnter: false });
+    try { jq(jqGridSel).jqGrid('navGrid', jqPagerSel, { add:false, edit:false, del:false, search:false, refresh:true }); } catch (e) {}
+    try {
+      const $container = jq('#jqgrid-container');
+      const cw = $container.width();
+      jq(jqGridSel).jqGrid('setGridWidth', cw > 0 ? cw : 800);
+      // Force refresh in case columns initialized after data
+      jq(jqGridSel).jqGrid('setGridParam', { data: jqData });
+      jq(jqGridSel).trigger('reloadGrid', [{ current: true }]);
+    } catch (e) { }
   }
 
-  function renderVisible() {
-    const height = gridEl.clientHeight || 0;
-    const total = rows.length;
-    if (!total || !rowHeight || !height) return;
-    const viewRows = Math.ceil(height / rowHeight);
-    const scrollTop = gridEl.scrollTop || 0;
-    const start = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
-    const end = Math.min(total, start + viewRows + overscan * 2);
-
-    if (lastRenderRange[0] === start && lastRenderRange[1] === end) return;
-    lastRenderRange = [start, end];
-
-    spacerTop.style.height = (start * rowHeight) + 'px';
-    spacerBottom.style.height = ((total - end) * rowHeight) + 'px';
-
-    const frag = document.createDocumentFragment();
-    rows.slice(start, end).forEach((r) => {
-      const rowEl = document.createElement('div');
-      rowEl.className = 'row';
-      r.forEach((v) => {
-        const c = document.createElement('div');
-        c.className = 'cell';
-        c.textContent = v == null ? '' : String(v);
-        rowEl.appendChild(c);
-      });
-      frag.appendChild(rowEl);
+  function appendRowsToJq(chunk) {
+    if (!jqReady || !Array.isArray(chunk) || !jqHeaders.length) return;
+    const startId = jqData.length + 1;
+    const mapped = chunk.map((arr, i) => {
+      const obj = { id: startId + i };
+      for (let c = 0; c < jqHeaders.length; c++) {
+        const key = jqKeys[c] || makeFieldKey(jqHeaders[c], c);
+        obj[key] = arr[c] == null ? '' : String(arr[c]);
+      }
+      return obj;
     });
-    rowsEl.replaceChildren(frag);
+    jqData.push(...mapped);
+    try {
+      jq(jqGridSel).jqGrid('setGridParam', { data: jqData });
+      jq(jqGridSel).trigger('reloadGrid', [{ current: true }]);
+      // Fallback: if grid still reports zero records, force addRowData
+      const recs = jq(jqGridSel).jqGrid('getGridParam','records') || jq(jqGridSel).jqGrid('getGridParam','reccount') || 0;
+      if (!recs && jqData.length) {
+        jq(jqGridSel).jqGrid('clearGridData', true);
+        for (var k = 0; k < jqData.length; k++) {
+          jq(jqGridSel).jqGrid('addRowData', jqData[k].id, jqData[k]);
+        }
+        jq(jqGridSel).jqGrid('setGridParam', { page: 1 });
+        jq(jqGridSel).trigger('reloadGrid');
+      }
+    } catch (e) { /* noop */ }
   }
 
-  function scheduleRender() {
-    if (raf) return;
-    raf = requestAnimationFrame(() => { raf = 0; renderVisible(); });
-  }
-
-  function initGrid() {
-    gridEl.scrollTop = 0;
-    gridEl.setAttribute('aria-colcount', String(headers.length));
-    gridEl.setAttribute('aria-rowcount', String(rows.length));
-    // First render a single row to measure height if needed
-    if (rows.length) {
-      const tmp = document.createElement('div');
-      tmp.className = 'row';
-      (headers.length ? headers : rows[0]).forEach(()=>{
-        const c = document.createElement('div'); c.className = 'cell'; c.textContent=''; tmp.appendChild(c);
-      });
-      rowsEl.appendChild(tmp);
-      rowHeight = tmp.getBoundingClientRect().height || rowHeight;
-      rowsEl.innerHTML = '';
-    }
-    scheduleRender();
-  }
+  
 
   function startWorkerParse(file, delimiter, hasHeader) {
     if (worker) { worker.terminate(); worker = null; }
-    worker = new Worker('csvWorker.js');
+    try {
+      worker = new Worker('/mapper/datauploader/csvWorker.js');
+    } catch (err) {
+      setStatus('Failed to start CSV worker. Open in a local server or allow file access.');
+      return;
+    }
     showProgress(0);
     setStatus('Parsing…');
     setMeta(`${file.name} — ${formatNumber(file.size)} bytes`);
@@ -123,23 +142,22 @@
       }
       if (msg.type === 'headers') {
         headers = msg.headers || [];
-        buildHeader(headers);
+        jqHeaders = headers.slice();
+        jqData = [];
+        if (jqReady) {
+          ensureJqGrid(jqHeaders);
+        }
+        setStatus(`Headers ready: ${headers.length} columns`);
         return;
       }
       if (msg.type === 'rows') {
-        const before = rows.length;
-        rows.push(...(msg.rows || []));
-        // update aria counts periodically
-        if ((rows.length - before) > 0) {
-          gridEl.setAttribute('aria-rowcount', String(rows.length));
-        }
-        scheduleRender();
+        appendRowsToJq(msg.rows || []);
+        try { setStatus(`Loaded ${formatNumber(jqData.length)} rows, ${headers.length} columns.`); } catch {}
         return;
       }
       if (msg.type === 'done') {
         showProgress();
-        setStatus(`Loaded ${formatNumber(rows.length)} rows, ${headers.length} columns.`);
-        initGrid();
+        setStatus(`Loaded ${formatNumber(jqData.length)} rows, ${headers.length} columns.`);
         return;
       }
       if (msg.type === 'error') {
@@ -147,12 +165,24 @@
         setStatus('Error: ' + (msg.error || 'Unknown'));
         return;
       }
+      // Unknown message type
+      try { console.warn('Unknown worker message', msg); } catch {}
+    };
+    worker.onerror = (ev) => {
+      showProgress();
+      setStatus('Worker error: ' + (ev && (ev.message || ev.filename) || 'unknown'));
     };
     worker.postMessage({ type: 'parse', file, delimiter, hasHeader });
   }
 
-  gridEl.addEventListener('scroll', scheduleRender, { passive: true });
-  window.addEventListener('resize', scheduleRender);
+  window.addEventListener('resize', () => {
+    if (jqReady) {
+      try {
+        const $c = jq('#jqgrid-container');
+        jq(jqGridSel).jqGrid('setGridWidth', $c.width());
+      } catch (e) { }
+    }
+  });
 
   fileInput.addEventListener('change', () => {
     resetGrid();
@@ -160,8 +190,6 @@
     if (!f) { setMeta('Waiting for file…'); setStatus(''); return; }
     const delimiter = delimiterSel.value || 'auto';
     const hasHeader = !!hasHeaderChk.checked;
-    buildHeader([]);
     startWorkerParse(f, delimiter, hasHeader);
   });
 })();
-

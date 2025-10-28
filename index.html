@@ -4,26 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mapper</title>
-    <style>
-      :root { --bg:#ffffff; --panel:#f8fafc; --muted:#64748b; --text:#0f172a; --accent:#16a34a; --border:#e5e7eb; --hover:#eef2f7; }
-      * { box-sizing: border-box; }
-      html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-      .layout { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 56px 1fr; height: 100%; }
-      header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
-      header h1 { font-size: 18px; margin: 0; font-weight: 700; }
-      header .sub { color: var(--muted); font-size: 12px; }
-      aside { border-right: 1px solid var(--border); background: var(--panel); padding: 10px; overflow: auto; }
-      .nav { display: flex; flex-direction: column; gap: 6px; }
-      .nav .section { margin: 10px 8px 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-      .link { display: flex; align-items: center; gap: 8px; padding: 10px 12px; color: var(--text); text-decoration: none; border-radius: 8px; border: 1px solid transparent; }
-      .link:hover { background: var(--hover); border-color: var(--border); }
-      .link.active { background: rgba(22,163,74,0.10); border-color: rgba(22,163,74,0.35); }
-      .link .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); }
-      .link.active .dot { background: var(--accent); }
-      main { position: relative; overflow: hidden; }
-      #content { position: absolute; inset: 0; border: 0; width: 100%; height: 100%; background: #ffffff; }
-      .hint { color: var(--muted); font-size: 12px; margin-left: auto; }
-    </style>
+    <link rel="stylesheet" href="/libraries/jquery-ui/jquery-ui-1.13.3.min.css">
+    <link rel="stylesheet" href="/libraries/free-jqgrid/css/ui.jqgrid.min.css">
+    <link rel="stylesheet" href="/css/site.css">
   </head>
   <body>
     <div class="layout">
@@ -35,53 +18,90 @@
       <aside>
         <div class="nav" id="nav">
           <div class="section">Data</div>
-          <a href="#/datauploader" data-route="datauploader" class="link">
+          <a href="mapper/datauploader/index.html" class="link">
             <span class="dot"></span>
             <span>Data Uploader (CSV)</span>
           </a>
           <div class="section">Graph</div>
-          <a href="#/graph" data-route="graph" class="link">
+          <a href="graph/Index.html" class="link">
             <span class="dot"></span>
             <span>Graph Viewer</span>
           </a>
         </div>
       </aside>
       <main>
-        <iframe id="content" title="Content"></iframe>
+        <div id="content" role="main" style="position:absolute;inset:0;overflow:auto;background:#fff;"></div>
       </main>
     </div>
+    <script src="/libraries/jquery/jquery-3.7.1.min.js"></script>
+    <script src="/libraries/jquery-ui/jquery-ui-1.13.3.min.js"></script>
+    <script src="/libraries/free-jqgrid/js/jquery.jqgrid.min.js"></script>
     <script>
       (function(){
-        const routes = {
-          datauploader: 'mapper/datauploader/index.html',
-          graph: 'graph/Index.html'
-        };
-        const frame = document.getElementById('content');
+        const content = document.getElementById('content');
         const nav = document.getElementById('nav');
 
-        function setActive(route){
-          nav.querySelectorAll('.link').forEach(a => {
-            a.classList.toggle('active', a.dataset.route === route);
+        function setActiveByUrl(url){
+          nav.querySelectorAll('.link').forEach(a => a.classList.toggle('active', a.getAttribute('data-url') === url));
+        }
+
+        async function loadPage(url){
+          const res = await fetch(url, { cache: 'no-store' });
+          const html = await res.text();
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const base = new URL(url, location.origin);
+          // Ensure page styles from <head>
+          const headLinks = Array.from(doc.querySelectorAll('head link[rel="stylesheet"][href]'));
+          headLinks.forEach(l => {
+            const href = l.getAttribute('href'); if (!href) return;
+            const abs = new URL(href, base).pathname;
+            if (![...document.styleSheets].some(s => s.href && (s.href.endsWith(abs) || s.href.endsWith(href)))){
+              const n = document.createElement('link'); n.rel='stylesheet'; n.href = abs; document.head.appendChild(n);
+            }
           });
+          // Inject body markup
+          content.innerHTML = doc.body ? doc.body.innerHTML : html;
+          // Execute scripts (resolve relative src against page base)
+          const scripts = Array.from(doc.querySelectorAll('script'));
+          for (const s of scripts){
+            const n = document.createElement('script');
+            const type = s.getAttribute('type'); if (type) n.type = type;
+            if (s.src) {
+              const abs = new URL(s.getAttribute('src'), base).pathname;
+              n.src = abs;
+              await new Promise(r=>{ n.onload=r; n.onerror=r; document.body.appendChild(n); });
+            } else {
+              n.textContent = s.textContent || '';
+              content.appendChild(n);
+            }
+          }
+          // If loading Data Uploader, ensure jqGrid CSS is last for precedence
+          if (url.includes('mapper/datauploader')){
+            const ensureLast = (href) => {
+              const link = Array.from(document.querySelectorAll('head link[rel="stylesheet"]')).find(x => x.getAttribute('href') === href);
+              if (link){ link.parentNode.removeChild(link); }
+              const n = document.createElement('link'); n.rel='stylesheet'; n.href=href; document.head.appendChild(n);
+            };
+            ensureLast('/libraries/jquery-ui/jquery-ui-1.13.3.min.css');
+            ensureLast('/libraries/free-jqgrid/css/ui.jqgrid.min.css');
+          }
         }
 
-        function loadRoute(route){
-          const url = routes[route] || routes.datauploader;
-          frame.src = url;
-          setActive(route in routes ? route : 'datauploader');
-        }
+        nav.addEventListener('click', (e)=>{
+          const a = e.target.closest('a.link'); if (!a) return; e.preventDefault();
+          const url = a.getAttribute('data-url'); if (!url) return;
+          setActiveByUrl(url); loadPage(url); history.replaceState(null,'',`#/${encodeURIComponent(url)}`);
+        });
 
-        function currentRoute(){
-          const h = location.hash || '#/datauploader';
-          const m = h.match(/^#\/(\w+)/);
-          return m ? m[1] : 'datauploader';
+        function initial(){
+          // Upgrade links to SPA behavior
+          nav.querySelectorAll('a.link').forEach(a => { const href=a.getAttribute('href'); if (href){ a.setAttribute('data-url', href); a.removeAttribute('href'); }});
+          const hash = location.hash && location.hash.startsWith('#/') ? decodeURIComponent(location.hash.slice(2)) : (nav.querySelector('a.link')?.getAttribute('data-url') || 'mapper/datauploader/index.html');
+          setActiveByUrl(hash); loadPage(hash);
         }
-
-        window.addEventListener('hashchange', () => loadRoute(currentRoute()));
-        // Initialize
-        if (!location.hash) location.hash = '#/datauploader';
-        loadRoute(currentRoute());
+        window.addEventListener('load', initial, { once:true });
       })();
     </script>
   </body>
   </html>
+

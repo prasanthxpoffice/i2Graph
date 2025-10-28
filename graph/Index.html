@@ -4,30 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple Graph Prototype (Checkpoint 9)</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Cytoscape.js Core -->
-    <!-- Scripts are blocking to ensure load order -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
-
-    <!-- Layout Dependencies + Extensions (order matters) -->
-    <!-- Dagre dependency -->
-    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
-    <!-- Cytoscape Dagre extension -->
-    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
-    <!-- Klay dependency -->
-    <script src="https://unpkg.com/klayjs@0.4.1/klay.js"></script>
-    <!-- Cytoscape Klay extension -->
-    <script src="https://unpkg.com/cytoscape-klay@3.1.4/cytoscape-klay.js"></script>
-
-    <!-- Context Menu Extension -->
-    <script src="https://unpkg.com/cytoscape-cxtmenu@3.5.0/cytoscape-cxtmenu.js"></script>
-
+    <!-- Common/global styles if needed -->
+    <link rel="stylesheet" href="/css/site.css" />
     <link rel="stylesheet" href="style.css" />
-    <!-- Fake API shim (development) -->
-    <script src="../fakeapi.js"></script>
-    <!-- App modules -->
+
+    <!-- Tailwind CSS (vendored) -->
+    <script src="/libraries/tailwind/tailwindcdn.min.js"></script>
+
+    <!-- Cytoscape.js core + layouts/extensions (order matters) -->
+    <script src="/libraries/cytoscape/cytoscape.min.js"></script>
+    <script src="/libraries/dagre/dagre.min.js"></script>
+    <script src="/libraries/cytoscape-dagre/cytoscape-dagre.js"></script>
+    <script src="/libraries/klay/klay.js"></script>
+    <script src="/libraries/cytoscape-klay/cytoscape-klay.js"></script>
+    <script src="/libraries/cytoscape-cxtmenu/cytoscape-cxtmenu.js"></script>
+
+    <!-- App + data sources -->
+    <script src="/fakeapi.js"></script>
     <script src="js/config.js"></script>
     <script src="js/transform.js"></script>
     <script src="js/indexes.js"></script>

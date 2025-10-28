@@ -12,6 +12,7 @@
     isFindingPath: false,
     pathStartNode: null,
     init(legendConfig){
+      
       const E = this.elements;
       E.languageSelect = document.getElementById('language-select');
       E.detailsContent = document.getElementById('details-content');
@@ -146,7 +147,13 @@
       cont.appendChild(div);
     },
     collectFilters(){ const groups = document.querySelectorAll('.filter-group'); return Array.from(groups).map((g)=>({ entityType: (g.querySelector('input[name="entityType"]').value||'').trim(), values: (g.querySelector('input[name="values"]').value||'').split(',').map(s=>s.trim()).filter(Boolean), direction: g.querySelector('select[name="direction"]').value, match: (g.querySelector('select[name="match"]').value||'exact') })).filter(f=> f.entityType && f.values.length>0); },
-    performSearch(){ const filters=this.collectFilters(); const depth=App.globalDepth||2; const lang=(this.elements.languageSelect && this.elements.languageSelect.value)||'EN'; if (filters.length===0){ App.graph.showStatus('Please add at least one valid filter (Entity Type and Value).'); return; } App.api.getGraphForFilters(filters, depth).then((data)=>{ if (!data || data.nodes.length===0){ App.graph.showStatus('No matches found. Loading full dataset.'); App.graph.initOrUpdate(App.baseData, lang, false); } else { App.graph.initOrUpdate(data, lang, false); } }); },
+    performSearch(){
+      const filters=this.collectFilters(); const depth=App.globalDepth||2; const lang=(this.elements.languageSelect && this.elements.languageSelect.value)||'EN';
+      if (filters.length===0){ App.graph.showStatus('Please add at least one valid filter (Entity Type and Value).'); return; }
+      App.api.getGraphForFilters(filters, depth).then((data)=>{
+        if (!data || data.nodes.length===0){ App.graph.showStatus('No matches found. Loading full dataset.'); App.graph.initOrUpdate(App.baseData, lang, false); } else { App.graph.initOrUpdate(data, lang, false); }
+      }).catch((err)=>{ console.error('[UI] performSearch failed', err); App.graph.showStatus('Search failed. Check console.'); });
+    },
     clearHighlights(){ const cy=App.cy; if (cy && !cy.destroyed()){ cy.batch(()=>{ cy.elements().removeClass('faded highlighted'); cy.nodes().removeClass('path-start path-end path-node'); cy.edges().removeClass('path-edge'); }); } },
     takeExpansionBatch(nodeId, elements, cap){ const batch=[]; const rest=[]; for (let i=0;i<elements.length;i++){ (i<cap?batch:rest).push(elements[i]); } if (rest.length>0){ const ex=pendingExpansions.get(nodeId)||{nodes:[],edges:[]}; ex.nodes.push(...rest.filter(e=>e.group==='nodes')); ex.edges.push(...rest.filter(e=>e.group==='edges')); pendingExpansions.set(nodeId, ex);} return batch; },
     async handleNodeExpansion(el){ if (!el || el.length===0) return; const nodeData=el.data(); App.graph.showStatus(`Checking neighbors for node ${nodeData.ID}...`); const lang=this.elements.languageSelect.value; const full = await App.api.getExpansionForNode(nodeData.id, App.globalDepth||2); const elementsToAdd=[]; full.nodes.forEach((n)=>{ if (!App.cy.getElementById(n.data.id).length) elementsToAdd.push(n); }); full.edges.forEach((e)=>{ if (!App.cy.getElementById(e.data.id).length) elementsToAdd.push(e); }); if (elementsToAdd.length===0){ App.graph.showStatus(`Node ${nodeData.ID} has no new, unexpanded neighbors.`); this.clearHighlights(); el.addClass('highlighted'); setTimeout(()=> el.removeClass('highlighted'), 1500); return; } const cap = (App.config && (App.config.batchSize ?? 200)) || 200; const capped = this.takeExpansionBatch(nodeData.id, elementsToAdd, cap); const newData = { nodes: capped.filter(e=>e.group==='nodes'), edges: capped.filter(e=>e.group==='edges') }; App.graph.initOrUpdate(newData, lang, true, el); },
