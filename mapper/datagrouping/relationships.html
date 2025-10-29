@@ -3,48 +3,47 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Name Groups</title>
+    <title>Define Relationships</title>
     <link rel="stylesheet" href="/css/site.css">
     <link rel="stylesheet" href="/css/datauploader.css">
     <style>
       @keyframes llm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       #llmSpinner { width:18px;height:18px;border:2px solid #d1d5db;border-top-color:#374151;border-radius:9999px;animation:llm-spin .9s linear infinite;display:none;margin-left:8px; }
       .statusRow { display:flex; align-items:center; gap:8px; }
-      .groupCard { border:1px solid #e5e7eb; padding:10px; border-radius:6px; }
-      .groupTitle { font-weight:600; margin-bottom:6px; }
-      .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-      .nameInput { min-width: 220px; padding:4px 8px; border:1px solid #d1d5db; border-radius:4px; }
+      table { width:100%; border-collapse: collapse; font-size:14px; }
+      th { text-align:left; border-bottom:1px solid #ddd; padding:6px 8px; }
+      td { border-bottom:1px solid #f0f0f0; padding:6px 8px; }
+      .nameInput { min-width: 200px; padding:4px 8px; border:1px solid #d1d5db; border-radius:4px; }
+      select { padding:4px 8px; }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header>
         <div class="controls">
-          <strong>Name Your Groups</strong>
-          <span class="hint">We’ll suggest names via LLM; you can edit.</span>
+          <strong>Define Relationships</strong>
+          <span class="hint">Select node pairs, name relationships EN/AR, and set direction.</span>
         </div>
         <div class="stats">
-          <div id="meta">Loading groups…</div>
+          <div id="meta">Loading…</div>
         </div>
       </header>
+
       <div class="statusRow">
         <div class="status" id="status" aria-live="polite"></div>
         <div id="llmSpinner" aria-hidden="true"></div>
       </div>
 
-      <section id="missing" style="display:none; margin-top:8px;" class="status">No groups found. Please go back and confirm groups first.</section>
+      <section id="rels" style="margin-top:8px;"></section>
 
-      <section id="naming" style="display:none; margin-top:8px;"></section>
-
-      <div class="controls" style="margin-top:12px;">
-        <button id="saveNamesBtn" class="pill">Confirm Names</button>
+      <div class="controls" style="margin-top:12px; gap:8px;">
+        <button id="saveRelsBtn" class="pill">Confirm Relationships</button>
       </div>
     </div>
 
     <script src="/llm/config.js"></script>
     <script src="/llm/index.js"></script>
-    <script src="./naming.js"></script>
+    <script src="./relationships.js"></script>
   </body>
   </html>
-
 

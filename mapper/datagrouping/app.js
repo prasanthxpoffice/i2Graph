@@ -327,7 +327,12 @@
         if (!g.id) { setStatus('ID column missing or select Hash for ID.'); return; }
         cols.push(g.id);
       }
-      for (const c of cols) { if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; } used.add(c); }
+      // Only check unique columns from this group against previously used ones
+      const uniqueInGroup = Array.from(new Set(cols));
+      for (const c of uniqueInGroup) {
+        if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; }
+      }
+      uniqueInGroup.forEach(c => used.add(c));
     }
 
     // Build grouped views
@@ -361,7 +366,12 @@
           if (!g.id) { setStatus('ID column missing or select Hash for ID.'); return; }
           cols.push(g.id);
         }
-        for (const c of cols) { if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; } used.add(c); }
+        // Only check unique columns from this group against previously used ones
+        const uniqueInGroup = Array.from(new Set(cols));
+        for (const c of uniqueInGroup) {
+          if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; }
+        }
+        uniqueInGroup.forEach(c => used.add(c));
       }
       try {
         // Persist grouping for naming step
