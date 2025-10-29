@@ -206,11 +206,7 @@
         '- If columns cityid, citynameen, citynamear exist, then form ID:cityid, EN:citynameen, AR:citynamear. Apply this for similar <base>id, <base>nameen, <base>namear (case-insensitive, underscores ignored).',
         '- Never reuse the same column across different roles in the same or different groups.',
         '- Use exact header names in the output.',
-        '',
-        'Also accept an optional array "forcedIncludes". For each header in forcedIncludes, you MUST create a standalone group:',
-        '- id = that header, en = that header, ar = that header, idStrategy = "column".',
-        '- Do this even if the column is numeric or has duplicates.',
-        '- Do not reuse any forcedInclude column in any other group.',
+        '- IMPORTANT: Every input header must belong to exactly one group. For any header not grouped by the above rules, create a standalone group with id = that header, en = that header, ar = that header, and idStrategy = "column".',
         '',
         'Return STRICT JSON ONLY (no markdown) with this schema:',
         '{ "groups": [ { "id": string|null, "en": string, "ar": string, "idStrategy"?: "column"|"hash" } ],',
@@ -220,14 +216,13 @@
       const user = JSON.stringify({
         headers,
         samples: samples.slice(0, 50),
-        constraints: { minConfidence },
-        forcedIncludes: forcedIncludes
+        constraints: { minConfidence }
       });
 
       try {
         const json = await this._postChat({ sys, user, temperature: 0.1 });
 
-        // Guardrails: dedupe/recompute leftovers
+        // Guardrails: dedupe and ensure full coverage
         let groups = Array.isArray(json.groups) ? json.groups : [];
         const used = new Set();
         const safe = [];
@@ -242,25 +237,19 @@
             idStrategy: g.idStrategy ?? (g.id == null ? 'hash' : 'column')
           });
         }
-        // Ensure all forcedIncludes are present as standalone groups
-        for (const h of forcedIncludes) {
+        // Any remaining headers become standalone groups (as requested)
+        for (const h of headers) {
           if (!used.has(h)) {
             safe.push({ id: h, en: h, ar: h, idStrategy: 'column' });
             used.add(h);
           }
         }
-        const groupedCols = new Set(safe.flatMap(g => [g.id, g.en, g.ar].filter(Boolean)));
-        const ungroupedAuto = (Array.isArray(json.ungrouped) ? json.ungrouped : []);
-        const ungrouped = [
-          ...ungroupedAuto.filter(u => u && u.column),
-          ...headers.filter(h => !groupedCols.has(h)).map(h => ({ column: h, reason: 'not part of any group' }))
-        ];
 
-        return { groups: safe, ungrouped, reason: null };
+        return { groups: safe, ungrouped: [], reason: null };
       } catch (e) {
-        // Fallback to heuristic grouping if LLM unavailable
-        const h = new HeuristicProvider();
-        return h.suggestGroupsFromHeaders(headers, { forcedIncludes });
+        // Fallback: make each header a standalone group
+        const safe = (headers || []).map(h => ({ id: h, en: h, ar: h, idStrategy: 'column' }));
+        return { groups: safe, ungrouped: [], reason: 'LLM unavailable; fallback applied' };
       }
     }
   }

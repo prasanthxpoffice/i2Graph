@@ -177,8 +177,8 @@
     });
   }
 
-  function suggestGroups(headers) {
-    if (window.LLM && window.LLM.suggestGroupsFromHeaders) return window.LLM.suggestGroupsFromHeaders(headers);
+  function suggestGroups(headers, opts) {
+    if (window.LLM && window.LLM.suggestGroupsFromHeaders) return window.LLM.suggestGroupsFromHeaders(headers, opts || {});
     return Promise.resolve({ groups: [], reason: 'LLM module not available' });
   }
 
@@ -244,7 +244,7 @@
       groupControls.style.display = '';
       // Ask LLM for groups from headers only
       setLoading(true);
-      const result = await suggestGroups(headers);
+      const result = await suggestGroups(headers, {});
       const llmGroups = Array.isArray(result) ? result : (Array.isArray(result.groups) ? result.groups : []);
       const reason = Array.isArray(result) ? null : (result && result.reason) || null;
       let ungrouped = Array.isArray(result && result.ungrouped) ? result.ungrouped : [];
@@ -257,10 +257,14 @@
         setStatus(msg);
         groupList.appendChild(buildGroupRow(null));
       }
+      // Convert any ungrouped columns into standalone groups to ensure full coverage
       if (ungrouped.length) {
-        ungroupedMsg.style.display = '';
-        const list = ungrouped.map(u => `${u.column}: ${u.reason}`).join('; ');
-        ungroupedMsg.textContent = `Columns not grouped: ${list}`;
+        ungrouped.forEach(u => {
+          const h = u && u.column;
+          if (!h) return;
+          groupList.appendChild(buildGroupRow({ id: h, en: h, ar: h, idStrategy: 'column' }));
+        });
+        if (ungroupedMsg) { ungroupedMsg.style.display = 'none'; ungroupedMsg.textContent = ''; }
       } else if (ungroupedMsg) {
         ungroupedMsg.style.display = 'none';
         ungroupedMsg.textContent = '';
@@ -300,6 +304,8 @@
   });
 
   addGroupBtn.addEventListener('click', () => { groupList.appendChild(buildGroupRow(null)); updateAllOptionLocks(); });
+
+  // Force-include UI removed by request; LLM now groups all columns.
 
   function hashId(enVal, arVal) {
     const s = String(enVal ?? '') + '||' + String(arVal ?? '');
