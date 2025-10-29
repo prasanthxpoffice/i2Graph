@@ -12,8 +12,8 @@ where py >nul 2>nul
 if %ERRORLEVEL%==0 (
   start "py_http_server" py -m http.server %PORT%
   timeout /t 2 >nul
-  start "" http://localhost:%PORT%/Index.html
-  echo Opened http://localhost:%PORT%/Index.html
+  start "" http://localhost:%PORT%/index.html
+  echo Opened http://localhost:%PORT%/index.html
   goto :end
 )
 
@@ -22,15 +22,15 @@ where python >nul 2>nul
 if %ERRORLEVEL%==0 (
   start "python_http_server" python -m http.server %PORT%
   timeout /t 2 >nul
-  start "" http://localhost:%PORT%/Index.html
-  echo Opened http://localhost:%PORT%/Index.html
+  start "" http://localhost:%PORT%/index.html
+  echo Opened http://localhost:%PORT%/index.html
   goto :end
 )
 
 REM Final fallback: open the file directly (may block fetch in some browsers)
 echo Python not found. Opening local file directly.
 echo If data does not load, install Python and rerun this script.
-start "" "%~dp0Index.html"
+start "" "%~dp0index.html"
 
 :end
 popd

@@ -99,6 +99,10 @@
           const hash = location.hash && location.hash.startsWith('#/') ? decodeURIComponent(location.hash.slice(2)) : (nav.querySelector('a.link')?.getAttribute('data-url') || 'mapper/datauploader/index.html');
           setActiveByUrl(hash); loadPage(hash);
         }
+        window.addEventListener('hashchange', () => {
+          const hash = location.hash && location.hash.startsWith('#/') ? decodeURIComponent(location.hash.slice(2)) : null;
+          if (hash) { setActiveByUrl(hash); loadPage(hash); }
+        });
         window.addEventListener('load', initial, { once:true });
       })();
     </script>

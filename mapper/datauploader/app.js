@@ -4,6 +4,8 @@
   const hasHeaderChk = document.getElementById('hasHeader');
   const metaEl = document.getElementById('meta');
   const statusEl = document.getElementById('status');
+  const validationEl = document.getElementById('validationError');
+  const nextStepBtn = document.getElementById('nextStepBtn');
   const progress = document.getElementById('progress');
   const progressBar = document.getElementById('progressBar');
   // jqGrid handles
@@ -17,6 +19,8 @@
 
   let worker = null;
   let headers = [];
+  let currentFile = null;
+  let headersAreUnique = false;
 
   function resetGrid() {
     headers = [];
@@ -33,6 +37,15 @@
 
   function setStatus(text) { statusEl.textContent = text || ''; }
   function setMeta(text) { metaEl.textContent = text || ''; }
+  function setValidationError(text) {
+    if (!validationEl) return;
+    validationEl.textContent = text || '';
+    if (text) {
+      validationEl.style.color = '#b91c1c';
+    } else {
+      validationEl.removeAttribute('style');
+    }
+  }
   function showProgress(pct) {
     if (pct == null) { progress.setAttribute('aria-hidden', 'true'); progressBar.style.width = '0%'; return; }
     progress.removeAttribute('aria-hidden');
@@ -91,6 +104,27 @@
       jq(jqGridSel).jqGrid('setGridParam', { data: jqData });
       jq(jqGridSel).trigger('reloadGrid', [{ current: true }]);
     } catch (e) { }
+
+    // After grid renders, validate header uniqueness
+    try {
+      const seen = new Map();
+      const dupSet = new Set();
+      (headersForCols || []).forEach((h) => {
+        const k = String(h == null ? '' : h).trim().toLowerCase();
+        if (!k) return;
+        if (seen.has(k)) dupSet.add(h);
+        else seen.set(k, 1);
+      });
+      const duplicates = Array.from(dupSet);
+      if (duplicates.length) {
+        headersAreUnique = false;
+        setValidationError('Duplicate column headers found: ' + duplicates.join(', '));
+      } else {
+        headersAreUnique = true;
+        setValidationError('');
+      }
+      if (nextStepBtn) nextStepBtn.disabled = !(headersAreUnique && !!currentFile);
+    } catch (err) { /* noop */ }
   }
 
   function appendRowsToJq(chunk) {
@@ -192,4 +226,39 @@
     const hasHeader = !!hasHeaderChk.checked;
     startWorkerParse(f, delimiter, hasHeader);
   });
+  // Secondary listener to track file and control Next Step state
+  fileInput.addEventListener('change', () => {
+    currentFile = (fileInput.files && fileInput.files[0]) || null;
+    if (nextStepBtn) nextStepBtn.disabled = !(headersAreUnique && !!currentFile);
+  });
+
+  if (nextStepBtn) {
+    nextStepBtn.addEventListener('click', () => {
+      if (!currentFile || !headersAreUnique) return;
+      try {
+        setStatus('Preparing next step...');
+        const reader = new FileReader();
+        reader.onerror = () => setStatus('Failed to read file for next step.');
+        reader.onload = () => {
+          try {
+            const text = String(reader.result || '');
+            sessionStorage.setItem('uploadedCsvText', text);
+            // Route within master layout if present; otherwise open master with hash
+            var target = encodeURIComponent('mapper/datagrouping/index.html');
+            var isInMaster = !!document.querySelector('.layout') || !!document.getElementById('content');
+            if (isInMaster) {
+              window.location.hash = '#/' + target;
+            } else {
+              window.location.href = '/Index.html#/' + target;
+            }
+          } catch (e) {
+            setStatus('Failed to store CSV in session.');
+          }
+        };
+        reader.readAsText(currentFile);
+      } catch (e) {
+        setStatus('Unexpected error preparing next step.');
+      }
+    });
+  }
 })();

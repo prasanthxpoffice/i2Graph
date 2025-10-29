@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSV Column Grouping</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <link rel="stylesheet" href="/css/datauploader.css">
+    <style>
+      /* lightweight spinner for LLM calls */
+      @keyframes llm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      #llmSpinner {
+        width: 18px; height: 18px; border: 2px solid #d1d5db; border-top-color: #374151;
+        border-radius: 9999px; animation: llm-spin 0.9s linear infinite; display: none; margin-left: 8px;
+      }
+      .statusRow { display: flex; align-items: center; gap: 8px; }
+      #llmBadge { font-size: 12px; padding: 2px 6px; border-radius: 8px; background:#e5e7eb; color:#111827; margin-left:8px; }
+      #llmBadge.ok { background:#dcfce7; color:#065f46; }
+      #llmBadge.err { background:#fee2e2; color:#7f1d1d; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="controls">
+          <strong>Auto Group Columns</strong>
+          <span class="hint">We’ll suggest ID/EN/AR groups from headers; adjust as needed.</span>
+        </div>
+        <div class="stats">
+          <div id="meta">Loading preview…</div>
+        </div>
+      </header>
+
+      <div class="statusRow">
+        <div class="status" id="status" aria-live="polite"></div>
+        <div id="llmSpinner" aria-hidden="true"></div>
+        <div id="llmBadge" title="LLM / Proxy status">Checking…</div>
+      </div>
+      <div class="status" id="ungroupedMsg" style="display:none"></div>
+
+      <!-- Section shown if session has no CSV -->
+      <section id="reupload" style="display:none; margin: 12px 0;">
+        <div class="controls">
+          <label class="pill">
+            <span>Select CSV</span>
+            <input id="reuploadInput" type="file" accept=".csv,text/csv" />
+          </label>
+          <span class="hint">No CSV found in session. Upload to continue.</span>
+        </div>
+      </section>
+
+      <!-- Groups builder -->
+      <section id="groupControls" style="display:none; margin: 12px 0;">
+        <div class="controls" style="flex-wrap: wrap; gap: 8px; align-items: center;">
+          <button id="addGroupBtn" class="pill">Add Group</button>
+          <button id="applyBtn" class="pill">Apply Grouping</button>
+          <span class="hint">LLM suggests groups; you can edit or add more.</span>
+        </div>
+        <div id="groupList" style="margin-top:8px; display:flex; flex-direction:column; gap:8px;"></div>
+      </section>
+
+      <!-- Grouped view -->
+      <section id="grouped" style="display:none; margin-top: 16px;">
+        <h3 style="font-weight:600; margin: 8px 0;">Grouped Views</h3>
+        <div id="groupedTable"></div>
+      </section>
+    </div>
+
+    <!-- LLM config (server path) + shared module -->
+    <script src="/llm/config.js"></script>
+    <script src="/llm/index.js"></script>
+    <!-- Page app -->
+    <script src="./app.js"></script>
+  </body>
+  </html>

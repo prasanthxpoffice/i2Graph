@@ -28,6 +28,7 @@
             <input id="hasHeader" type="checkbox" checked />
             <span>Header row</span>
           </label>
+          <button id="nextStepBtn" class="pill" disabled>Next Step</button>
           <span class="hint">Large files are parsed in a web worker and shown in jqGrid with pagination and header search.</span>
         </div>
         <div class="stats">
@@ -36,6 +37,7 @@
       </header>
       <div class="progress" id="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
       <div class="status" id="status" aria-live="polite"></div>
+      <div class="status" id="validationError" aria-live="assertive"></div>
       <!-- jqGrid table + pager (legacy grid removed) -->
       <div id="jqgrid-container">
         <table id="jqgrid"></table>
