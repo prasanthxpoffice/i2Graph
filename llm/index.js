@@ -252,6 +252,36 @@
         return { groups: safe, ungrouped: [], reason: 'LLM unavailable; fallback applied' };
       }
     }
+
+    async suggestGroupNames(headers, groups, samples = []) {
+      const cfg = await loadConfig();
+      const apiBase = (this.opts.apiBase || cfg.apiBase || DEFAULTS.apiBase).replace(/\/$/, '');
+      const sys = [
+        'You are a naming assistant.',
+        'Given CSV headers and an array of groups (each with id, en, ar, idStrategy), return STRICT JSON ONLY (no prose).',
+        'Goal: propose a short, human-friendly name for each group, based on the semantic meaning of its EN/AR columns and ID pattern.',
+        'Rules:',
+        '- Prefer concise nouns like "City", "Employee", "Department".',
+        '- If EN indicates a base like cityname or nameen/namear, infer the base (e.g., City).',
+        '- Fall back to TitleCase of the EN header when unsure.',
+        'Output: { "names": [ { "index": number, "name": string } ] } where index matches the input group index.'
+      ].join('\n');
+      const user = JSON.stringify({ headers, groups, samples: (samples||[]).slice(0, 20) });
+      try {
+        const resp = await fetch(apiBase + '/chat/completions', {
+          method: 'POST', headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ messages: [ {role:'system', content: sys}, {role:'user', content: user} ], temperature: 0.2 })
+        });
+        const raw = await resp.text();
+        let data; try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+        const text = data?.choices?.[0]?.message?.content || '';
+        let json = {}; try { json = JSON.parse((text.match(/\{[\s\S]*\}/) || [])[0] || '{}'); } catch {}
+        const names = Array.isArray(json.names) ? json.names : [];
+        return names;
+      } catch (_) {
+        return [];
+      }
+    }
   }
 
   const LLM = {
@@ -269,6 +299,12 @@
       const p = this.getProvider();
       if (p.suggestGroupsFromHeaders) return p.suggestGroupsFromHeaders(headers, opts);
       return { groups: [], reason: 'No provider available.', ungrouped: [] };
+    },
+
+    async suggestGroupNames(headers, groups, samples = []) {
+      const p = this.getProvider();
+      if (p.suggestGroupNames) return p.suggestGroupNames(headers, groups, samples);
+      return [];
     }
   };
 
