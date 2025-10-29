@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "description": "Secure backend proxy for LLM calls (OpenAI-compatible)",
-  "main": "index.js",
+  "main": "llm.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js"
+    "start": "node llm.js",
+    "start:llm": "node llm.js",
+    "start:db": "node db.js",
+    "dev": "node llm.js"
   },
   "engines": {
     "node": ">=18.0.0"

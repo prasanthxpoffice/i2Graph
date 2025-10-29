@@ -14,6 +14,9 @@
         <h1>Mapper</h1>
         <span class="sub">Tools for preparing and loading data</span>
         <span class="hint">Use the sidebar to open a tool</span>
+        <div id="userBadge" style="margin-left:auto; padding:2px 8px; background:#eef; border-radius:10px; font-size:12px;">
+          User: <span id="userId">1001</span>
+        </div>
       </header>
       <aside>
         <div class="nav" id="nav">
@@ -40,6 +43,8 @@
       (function(){
         const content = document.getElementById('content');
         const nav = document.getElementById('nav');
+        // Hard-coded user id for now (used by DB API)
+        window.CURRENT_USER_ID = 1001;
 
         function setActiveByUrl(url){
           nav.querySelectorAll('.link').forEach(a => a.classList.toggle('active', a.getAttribute('data-url') === url));

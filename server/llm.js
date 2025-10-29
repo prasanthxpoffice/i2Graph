@@ -1,5 +1,6 @@
 /*
-  Minimal secure proxy for OpenAI-compatible chat completions.
+  LLM Proxy Server (renamed from index.js)
+  - Minimal secure proxy for OpenAI-compatible chat completions.
   - Requires Node >= 18 (global fetch)
   - Reads env from server/.env (see .env.example)
   - Adds CORS (allowed origins), Helmet, rate limiting, and JSON/body limits
