@@ -327,8 +327,6 @@
         if (!g.id) { setStatus('ID column missing or select Hash for ID.'); return; }
         cols.push(g.id);
       }
-      const uniq = new Set(cols);
-      if (uniq.size !== cols.length) { setStatus('A group cannot reuse the same column for multiple roles.'); return; }
       for (const c of cols) { if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; } used.add(c); }
     }
 
@@ -363,8 +361,6 @@
           if (!g.id) { setStatus('ID column missing or select Hash for ID.'); return; }
           cols.push(g.id);
         }
-        const uniq = new Set(cols);
-        if (uniq.size !== cols.length) { setStatus('A group cannot reuse the same column for multiple roles.'); return; }
         for (const c of cols) { if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; } used.add(c); }
       }
       try {
