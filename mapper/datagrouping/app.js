@@ -6,6 +6,7 @@
   const groupControls = document.getElementById('groupControls');
   const addGroupBtn = document.getElementById('addGroupBtn');
   const applyBtn = document.getElementById('applyBtn');
+  const confirmBtn = document.getElementById('confirmBtn');
   const groupList = document.getElementById('groupList');
   const groupedDiv = document.getElementById('groupedTable');
   const ungroupedMsg = document.getElementById('ungroupedMsg');
@@ -22,6 +23,7 @@
     try {
       if (addGroupBtn) addGroupBtn.disabled = !!loading;
       if (applyBtn) applyBtn.disabled = !!loading;
+      if (confirmBtn) confirmBtn.disabled = !!loading;
       if (loading) {
         statusEl.textContent = 'Suggesting groups from headers…';
       }
@@ -346,7 +348,37 @@
     });
     document.getElementById('grouped').style.display = '';
     setStatus('Applied grouping. Review results below.');
+    if (confirmBtn) confirmBtn.disabled = false;
   });
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      const groups = Array.from(groupList.children).map(r => r.getValue());
+      // Reuse validation
+      const used = new Set();
+      for (const g of groups) {
+        if (!g.en || !g.ar) { setStatus('Each group needs EN and AR.'); return; }
+        const cols = [g.en, g.ar];
+        if (g.idStrategy === 'column') {
+          if (!g.id) { setStatus('ID column missing or select Hash for ID.'); return; }
+          cols.push(g.id);
+        }
+        const uniq = new Set(cols);
+        if (uniq.size !== cols.length) { setStatus('A group cannot reuse the same column for multiple roles.'); return; }
+        for (const c of cols) { if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; } used.add(c); }
+      }
+      try {
+        // Persist grouping for naming step
+        sessionStorage.setItem('groupingDefinition', JSON.stringify(groups));
+        // Navigate inside master layout to naming step
+        const target = encodeURIComponent('mapper/datagrouping/naming.html');
+        const inMaster = !!document.querySelector('.layout') || !!document.getElementById('content');
+        if (inMaster) window.location.hash = '#/' + target; else window.location.href = '/Index.html#/' + target;
+      } catch (e) {
+        setStatus('Failed to save groups for next step.');
+      }
+    });
+  }
 
   initFromSession();
   checkLlmHealth();
