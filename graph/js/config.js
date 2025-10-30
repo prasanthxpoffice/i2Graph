@@ -12,7 +12,7 @@
 
   App.loadConfig = async function loadConfig() {
     try {
-      const res = await fetch('/config.json', { cache: 'no-store' });
+      const res = await fetch('/scripts/config.json', { cache: 'no-store' });
       const json = await res.json();
       if (!json || !json.apiBaseUrl) throw new Error('apiBaseUrl missing');
       App.setConfig(json);

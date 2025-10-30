@@ -7,6 +7,7 @@
 // - suggestGroupsFromHeaders(headers, opts?)
 
 (function () {
+
   const DEFAULTS = {
     apiBase: '/api' // e.g. your proxy that maps to OpenAI or any LLM
   };
@@ -21,7 +22,7 @@
         const inline = (typeof window !== 'undefined' && window.LLM_CONFIG) || {};
         let fileCfg = {};
         try {
-          const res = await fetch('/config.json', { cache: 'no-store' });
+          const res = await fetch('/scripts/config.json', { cache: 'no-store' });
           if (res.ok) fileCfg = await res.json();
         } catch (_) {}
         // FIX: actually merge DEFAULTS + fileCfg + inline (inline wins)
@@ -138,45 +139,50 @@
     constructor(opts) { this.opts = opts || {}; }
 
     async _postChat({ sys, user, temperature = 0.1 }) {
+      try { window.Activity && window.Activity.start(); } catch(_) {}
       const cfg = await loadConfig();
       const apiBase = (this.opts.apiBase || cfg.apiBase || DEFAULTS.apiBase).replace(/\/$/, '');
-      const resp = await fetch(apiBase + '/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: sys },
-            { role: 'user', content: user }
-          ],
-          temperature,
-          // Helps with OpenAI-compatible servers; others ignore it gracefully:
-          response_format: { type: 'json_object' }
-        })
-      });
-      const raw = await resp.text();
-      let data;
-      try { data = JSON.parse(raw); } catch { data = null; }
+      try {
+        const resp = await fetch(apiBase + '/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: sys },
+              { role: 'user', content: user }
+            ],
+            temperature,
+            // Helps with OpenAI-compatible servers; others ignore it gracefully:
+            response_format: { type: 'json_object' }
+          })
+        });
+        const raw = await resp.text();
+        let data;
+        try { data = JSON.parse(raw); } catch { data = null; }
 
-      if (!resp.ok) {
-        const msg = (data && (data.error?.message || data.message)) || raw.slice(0, 200) || `HTTP ${resp.status}`;
-        throw new Error(`LLM proxy error: ${msg}`);
+        if (!resp.ok) {
+          const msg = (data && (data.error?.message || data.message)) || raw.slice(0, 200) || `HTTP ${resp.status}`;
+          throw new Error(`LLM proxy error: ${msg}`);
+        }
+
+        // Try direct JSON
+        if (data && data.groups && data.ungrouped) return data;
+
+        // Try OpenAI-style
+        const text = data?.choices?.[0]?.message?.content ?? '';
+        let jsonStr = text;
+        // strip fences if present
+        jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '');
+        let parsed;
+        try { parsed = JSON.parse(jsonStr); } catch {
+          const m = jsonStr.match(/\{[\s\S]*\}/);
+          if (!m) throw new Error('LLM did not return JSON');
+          parsed = JSON.parse(m[0]);
+        }
+        return parsed;
+      } finally {
+        try { window.Activity && window.Activity.end(); } catch(_) {}
       }
-
-      // Try direct JSON
-      if (data && data.groups && data.ungrouped) return data;
-
-      // Try OpenAI-style
-      const text = data?.choices?.[0]?.message?.content ?? '';
-      let jsonStr = text;
-      // strip fences if present
-      jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '');
-      let parsed;
-      try { parsed = JSON.parse(jsonStr); } catch {
-        const m = jsonStr.match(/\{[\s\S]*\}/);
-        if (!m) throw new Error('LLM did not return JSON');
-        parsed = JSON.parse(m[0]);
-      }
-      return parsed;
     }
 
     async suggestRoles(headers, rows) {
@@ -268,6 +274,7 @@
       ].join('\n');
       const user = JSON.stringify({ headers, groups, samples: (samples||[]).slice(0, 20) });
       try {
+        try { window.Activity && window.Activity.start(); } catch(_) {}
         const resp = await fetch(apiBase + '/chat/completions', {
           method: 'POST', headers: { 'Content-Type':'application/json' },
           body: JSON.stringify({ messages: [ {role:'system', content: sys}, {role:'user', content: user} ], temperature: 0.2 })
@@ -280,7 +287,7 @@
         return names;
       } catch (_) {
         return [];
-      }
+      } finally { try { window.Activity && window.Activity.end(); } catch(_) {} }
     }
   }
 

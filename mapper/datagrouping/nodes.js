@@ -1,13 +1,13 @@
 (() => {
   const statusEl = document.getElementById('status');
   const metaEl = document.getElementById('meta');
-  const spinner = document.getElementById('llmSpinner');
+  // Using global spinner via window.Activity; no page-local spinner
   const nodesEl = document.getElementById('nodes');
   const saveBtn = document.getElementById('saveNodesBtn');
 
   function setStatus(t){ statusEl.textContent = t || ''; }
   function setMeta(t){ metaEl.textContent = t || ''; }
-  function setLoading(b){ spinner.style.display = b ? '' : 'none'; saveBtn.disabled = !!b; }
+  function setLoading(b){ saveBtn.disabled = !!b; }
 
   function loadGroups(){ try { return JSON.parse(sessionStorage.getItem('groupingDefinition')||'[]'); } catch { return []; } }
   function loadGroupNames(){ try { return JSON.parse(sessionStorage.getItem('groupNames')||'[]'); } catch { return []; } }
@@ -30,6 +30,7 @@
       ].join('\n');
       const user = JSON.stringify({ groups, names });
       setLoading(true);
+      try { window.Activity && window.Activity.start(); } catch(_) {}
       const resp = await fetch(apiBase + '/chat/completions', {
         method: 'POST', headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({ messages: [ {role:'system', content: sys}, {role:'user', content: user} ], temperature: 0.1 })
@@ -41,7 +42,7 @@
       const nodes = Array.isArray(json.nodes) ? json.nodes : [];
       return nodes.map(n => ({ index: Number(n.index), isNode: !!n.isNode, en: String(n.en||''), ar: String(n.ar||'') }));
     } catch(e) { return []; }
-    finally { setLoading(false); }
+    finally { setLoading(false); try { window.Activity && window.Activity.end(); } catch(_) {} }
   }
 
   function renderTable(groups, initial){

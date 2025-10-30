@@ -4,11 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Select Nodes</title>
-    <link rel="stylesheet" href="/css/site.css">
-    <link rel="stylesheet" href="/css/datauploader.css">
+   
     <style>
-      @keyframes llm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      #llmSpinner { width:18px;height:18px;border:2px solid #d1d5db;border-top-color:#374151;border-radius:9999px;animation:llm-spin .9s linear infinite;display:none;margin-left:8px; }
+      
       .statusRow { display:flex; align-items:center; gap:8px; }
       table { width:100%; border-collapse: collapse; font-size:14px; }
       th { text-align:left; border-bottom:1px solid #ddd; padding:6px 8px; }
@@ -30,7 +28,6 @@
 
       <div class="statusRow">
         <div class="status" id="status" aria-live="polite"></div>
-        <div id="llmSpinner" aria-hidden="true"></div>
       </div>
 
       <section id="nodes" style="margin-top:8px;"></section>
@@ -40,6 +37,7 @@
       </div>
     </div>
 
+    <script src="/scripts/global-activity.js"></script>
     <script src="/llm/config.js"></script>
     <script src="/llm/index.js"></script>
     <script src="./nodes.js"></script>

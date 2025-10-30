@@ -10,7 +10,7 @@
   const groupList = document.getElementById('groupList');
   const groupedDiv = document.getElementById('groupedTable');
   const ungroupedMsg = document.getElementById('ungroupedMsg');
-  const llmSpinner = document.getElementById('llmSpinner');
+  // Removed page-local spinner; relying on global Activity spinner
   const llmBadge = document.getElementById('llmBadge');
 
   let headers = [];
@@ -27,7 +27,7 @@
       if (loading) {
         statusEl.textContent = 'Suggesting groups from headers…';
       }
-      if (llmSpinner) llmSpinner.style.display = loading ? '' : 'none';
+      // spinner handled globally by window.Activity
     } catch (e) { /* noop */ }
   }
 

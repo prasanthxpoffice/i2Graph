@@ -6,8 +6,8 @@
     try {
       const [cfg, legend, raw] = await Promise.all([
         App.loadConfig(),
-        fetch('/master.json', { cache: 'no-store' }).then(r=>{ if(!r.ok) throw new Error('master.json '+r.status); return r.json(); }).catch(()=>{ return null; }),
-        fetch('/data.json', { cache: 'no-store' }).then(r=>{ if(!r.ok) throw new Error('data.json '+r.status); return r.json(); })
+        fetch('/scripts/master.json', { cache: 'no-store' }).then(r=>{ if(!r.ok) throw new Error('master.json '+r.status); return r.json(); }).catch(()=>{ return null; }),
+        fetch('/scripts/data.json', { cache: 'no-store' }).then(r=>{ if(!r.ok) throw new Error('data.json '+r.status); return r.json(); })
       ]);
       App.colors = App.buildColors(legend);
       const baseData = App.transformNewElements(raw);

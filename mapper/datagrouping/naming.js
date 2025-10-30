@@ -1,14 +1,14 @@
 (() => {
   const statusEl = document.getElementById('status');
   const metaEl = document.getElementById('meta');
-  const spinner = document.getElementById('llmSpinner');
+  // Using global spinner via window.Activity; no page-local spinner
   const missingEl = document.getElementById('missing');
   const namingEl = document.getElementById('naming');
   const saveBtn = document.getElementById('saveNamesBtn');
 
   function setStatus(t){ statusEl.textContent = t || ''; }
   function setMeta(t){ metaEl.textContent = t || ''; }
-  function setLoading(b){ spinner.style.display = b ? '' : 'none'; saveBtn.disabled = !!b; }
+  function setLoading(b){ saveBtn.disabled = !!b; }
 
   function loadGroups(){
     try { return JSON.parse(sessionStorage.getItem('groupingDefinition') || '[]'); } catch { return []; }
@@ -39,6 +39,7 @@
       ].join('\n');
       const user = JSON.stringify({ headers, groups, samples: sampleRows.slice(0, 20) });
       try {
+        try { window.Activity && window.Activity.start(); } catch(_) {}
         const resp = await fetch(apiBase + '/chat/completions', {
           method: 'POST', headers: { 'Content-Type':'application/json' },
           body: JSON.stringify({ messages: [ {role:'system', content: sys}, {role:'user', content: user} ], temperature: 0.2 })
@@ -51,7 +52,7 @@
         return names.map(n => ({ index: Number(n.index), en: String(n.en || n.name || ''), ar: String(n.ar || '') }));
       } catch (e) {
         return [];
-      }
+      } finally { try { window.Activity && window.Activity.end(); } catch(_) {} }
     }
     return [];
   }
