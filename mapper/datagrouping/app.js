@@ -102,9 +102,7 @@
 
     const idWrap = document.createElement('label'); idWrap.className = 'pill'; idWrap.textContent = ' ID ';
     const idSel = document.createElement('select'); idSel.style.minWidth = '140px';
-    const hashCb = document.createElement('input'); hashCb.type = 'checkbox'; hashCb.style.marginLeft = '8px';
-    const hashLbl = document.createElement('span'); hashLbl.textContent = 'Hash EN+AR'; hashLbl.style.marginLeft = '4px';
-    idWrap.appendChild(idSel); idWrap.appendChild(hashCb); idWrap.appendChild(hashLbl);
+    idWrap.appendChild(idSel);
 
     const enWrap = document.createElement('label'); enWrap.className = 'pill'; enWrap.textContent = ' EN ';
     const enSel = document.createElement('select'); enSel.style.minWidth = '140px'; enWrap.appendChild(enSel);
@@ -129,20 +127,19 @@
           sel.appendChild(createOption(h, h === current, disallow));
         });
       });
-      idSel.disabled = hashCb.checked;
+      // No hash logic: ID is always a column and required
+      idSel.disabled = false;
     }
 
-    hashCb.addEventListener('change', refreshOptions);
-    [idSel, enSel, arSel].forEach(s => s.addEventListener('change', () => updateAllOptionLocks()));
+    [idSel, enSel, arSel].forEach(s => s.addEventListener('change', () => { refreshOptions(); updateAllOptionLocks(); }));
     removeBtn.addEventListener('click', () => { row.remove(); updateAllOptionLocks(); });
 
-    row.getValue = () => ({ id: hashCb.checked ? null : (idSel.value||null), en: enSel.value||null, ar: arSel.value||null, idStrategy: hashCb.checked ? 'hash' : 'column' });
+    row.getValue = () => ({ id: idSel.value || null, en: enSel.value || null, ar: arSel.value || null, idStrategy: 'column' });
     row.setValue = (g) => {
-      hashCb.checked = g?.idStrategy === 'hash' || (!g?.id && !!(g?.en) && !!(g?.ar));
-      refreshOptions();
       if (g?.id) idSel.value = g.id;
       if (g?.en) enSel.value = g.en;
       if (g?.ar) arSel.value = g.ar;
+      refreshOptions();
       updateAllOptionLocks();
     };
 
@@ -173,9 +170,7 @@
           opt.disabled = used.has(opt.value) && opt.value !== current;
         });
       });
-      const hashCb = r.querySelector('input[type="checkbox"]');
-      const idSel = r.querySelector('label.pill select');
-      if (hashCb && idSel) idSel.disabled = hashCb.checked;
+      // hash mode handled per-row in refreshOptions
     });
   }
 
@@ -309,12 +304,7 @@
 
   // Force-include UI removed by request; LLM now groups all columns.
 
-  function hashId(enVal, arVal) {
-    const s = String(enVal ?? '') + '||' + String(arVal ?? '');
-    let h = 2166136261 >>> 0; // FNV-1a
-    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return (h >>> 0).toString(36);
-  }
+  // No hash logic required; IDs must come from a selected column
 
   applyBtn.addEventListener('click', () => {
     const groups = Array.from(groupList.children).map(r => r.getValue());
@@ -343,7 +333,7 @@
       const tableRows = rows.map(r => {
         const EN = r[g.en];
         const AR = r[g.ar] ?? EN;
-        const ID = g.idStrategy === 'hash' ? hashId(EN, AR) : r[g.id];
+        const ID = r[g.id];
         return { ID, EN, AR };
       });
       renderTable(section, ['ID','EN','AR'], tableRows, 50);

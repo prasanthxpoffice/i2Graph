@@ -207,7 +207,7 @@
         'Goal: infer zero or more groups of roles: ID, EN (English text), AR (Arabic text).',
         'Rules:',
         '- Prefer matching pairs like <base>EN and <base>AR and associate an ID like <base>ID if present.',
-        '- If only one text column exists for a concept (e.g., department), set EN to that column and AR to the same column, and set idStrategy to "hash" (ID = hash(EN, AR)).',
+        '- If only one text column exists for a concept (e.g., department), set ID to that column, EN to that column and AR to the same column, and set idStrategy to "hash".',
         '- If columns <base>ID and <base>NAME exist (e.g., cityid, cityname), form ID:<base>ID (idStrategy="column"), EN:<base>NAME, AR:<base>NAME.',
         '- If columns cityid, citynameen, citynamear exist, then form ID:cityid, EN:citynameen, AR:citynamear. Apply this for similar <base>id, <base>nameen, <base>namear (case-insensitive, underscores ignored).',
         '- Never reuse the same column across different roles in the same or different groups.',
@@ -236,12 +236,8 @@
           const cols = [g.id, g.en, g.ar].filter(Boolean);
           if (cols.some(c => used.has(c))) continue;
           cols.forEach(c => used.add(c));
-          safe.push({
-            id: g.id ?? null,
-            en: g.en,
-            ar: g.ar,
-            idStrategy: g.idStrategy ?? (g.id == null ? 'hash' : 'column')
-          });
+          const idStrategy = g.idStrategy ?? (g.id == null ? 'hash' : 'column');
+          safe.push({ id: g.id ?? null, en: g.en, ar: g.ar, idStrategy });
         }
         // Any remaining headers become standalone groups (as requested)
         for (const h of headers) {
@@ -253,7 +249,7 @@
 
         return { groups: safe, ungrouped: [], reason: null };
       } catch (e) {
-        // Fallback: make each header a standalone group
+        // Fallback: make each header a standalone group with column IDs
         const safe = (headers || []).map(h => ({ id: h, en: h, ar: h, idStrategy: 'column' }));
         return { groups: safe, ungrouped: [], reason: 'LLM unavailable; fallback applied' };
       }
