@@ -5,6 +5,7 @@
   const missingEl = document.getElementById('missing');
   const namingEl = document.getElementById('naming');
   const saveBtn = document.getElementById('saveNamesBtn');
+  const prevBtn = document.getElementById('prevToGroupingBtn');
 
   function setStatus(t){ statusEl.textContent = t || ''; }
   function setMeta(t){ metaEl.textContent = t || ''; }
@@ -14,6 +15,7 @@
     try { return JSON.parse(sessionStorage.getItem('groupingDefinition') || '[]'); } catch { return []; }
   }
   function loadCsv(){ return sessionStorage.getItem('uploadedCsvText') || ''; }
+  function loadSavedNames(){ try { return JSON.parse(sessionStorage.getItem('groupNames')||'[]'); } catch { return []; } }
 
   async function suggestNames(headers, groups, sampleRows){
     try {
@@ -91,12 +93,19 @@
       const head = csv.split(/\r?\n/)[0] || '';
       head.split(',').forEach(h => headers.push(String(h||'').trim()));
     } catch {}
-    setLoading(true);
-    const names = await suggestNames(headers, groups, samples);
-    setLoading(false);
-    setStatus(names.length ? 'LLM suggested names. Review and edit.' : 'No name suggestions from LLM. Provide names manually.');
-    namingEl.style.display='';
-    renderTable(groups, names || []);
+    const saved = loadSavedNames();
+    if (Array.isArray(saved) && saved.length){
+      setStatus('Using previously saved group names.');
+      namingEl.style.display='';
+      renderTable(groups, saved);
+    } else {
+      setLoading(true);
+      const names = await suggestNames(headers, groups, samples);
+      setLoading(false);
+      setStatus(names.length ? 'LLM suggested names. Review and edit.' : 'No name suggestions from LLM. Provide names manually.');
+      namingEl.style.display='';
+      renderTable(groups, names || []);
+    }
   }
 
   function renderTable(groups, names){
@@ -163,6 +172,14 @@
       setStatus('Failed to save names.');
     }
   });
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      const target = encodeURIComponent('mapper/datagrouping/index.html');
+      const inMaster = !!document.querySelector('.layout') || !!document.getElementById('content');
+      if (inMaster) window.location.hash = '#/' + target; else window.location.href = '/Index.html#/' + target;
+    });
+  }
 
   init();
 })();

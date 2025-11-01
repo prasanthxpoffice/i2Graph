@@ -4,6 +4,9 @@
   // Using global spinner via window.Activity; no page-local spinner
   const nodesEl = document.getElementById('nodes');
   const saveBtn = document.getElementById('saveNodesBtn');
+  const prevBtn = document.getElementById('prevToNamingBtn');
+  let allGroups = [];
+  let nameMapCache = new Map();
 
   function setStatus(t){ statusEl.textContent = t || ''; }
   function setMeta(t){ metaEl.textContent = t || ''; }
@@ -11,6 +14,7 @@
 
   function loadGroups(){ try { return JSON.parse(sessionStorage.getItem('groupingDefinition')||'[]'); } catch { return []; } }
   function loadGroupNames(){ try { return JSON.parse(sessionStorage.getItem('groupNames')||'[]'); } catch { return []; } }
+  function loadSavedNodes(){ try { return JSON.parse(sessionStorage.getItem('nodesDefinition')||'[]'); } catch { return []; } }
 
   function namesByIndex(){ const map = new Map(); (loadGroupNames()||[]).forEach(n=>map.set(n.index, n)); return map; }
 
@@ -50,7 +54,7 @@
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const thr = document.createElement('tr');
-    ['#','ID','EN','AR','Is Node?','Node Label EN','Node Label AR'].forEach(h=>{
+    ['ID','EN','AR','Group Name EN','Group Name AR','Is Node?'].forEach(h=>{
       const th=document.createElement('th'); th.textContent=h; th.style.padding='6px 8px'; th.style.borderBottom='1px solid #ddd'; thr.appendChild(th);
     });
     thead.appendChild(thr); table.appendChild(thead);
@@ -59,19 +63,17 @@
     groups.forEach((g, i) => {
       const tr = document.createElement('tr');
       const pref = initial.find(x=>x.index===i) || {};
-      const tdIdx=document.createElement('td'); tdIdx.textContent=String(i+1);
       const tdId=document.createElement('td'); tdId.textContent=g.id?g.id:'(hash EN+AR)';
+      const nm = nameMap.get(i);
       const tdEn=document.createElement('td'); tdEn.textContent=g.en||'';
       const tdAr=document.createElement('td'); tdAr.textContent=g.ar||'';
-      [tdIdx,tdId,tdEn,tdAr].forEach(td=>{ td.style.padding='6px 8px'; td.style.borderBottom='1px solid #f0f0f0'; });
+      const tdGEn=document.createElement('td'); tdGEn.textContent=(nm?.en)||g.en||'';
+      const tdGAr=document.createElement('td'); tdGAr.textContent=(nm?.ar)||g.ar||'';
+      [tdId,tdEn,tdAr,tdGEn,tdGAr].forEach(td=>{ td.style.padding='6px 8px'; td.style.borderBottom='1px solid #f0f0f0'; });
       const tdChk=document.createElement('td'); tdChk.style.padding='6px 8px'; tdChk.style.borderBottom='1px solid #f0f0f0';
       const chk=document.createElement('input'); chk.type='checkbox'; chk.className='isNodeChk'; chk.checked = pref.isNode ?? true; chk.setAttribute('data-index', String(i)); tdChk.appendChild(chk);
-      const tdEnLab=document.createElement('td'); tdEnLab.style.padding='6px 8px'; tdEnLab.style.borderBottom='1px solid #f0f0f0';
-      const enInput=document.createElement('input'); enInput.type='text'; enInput.className='nameInput'; enInput.value = pref.en || nameMap.get(i)?.en || g.en || ''; enInput.setAttribute('data-index', String(i)); enInput.setAttribute('data-lang','en'); tdEnLab.appendChild(enInput);
-      const tdArLab=document.createElement('td'); tdArLab.style.padding='6px 8px'; tdArLab.style.borderBottom='1px solid #f0f0f0';
-      const arInput=document.createElement('input'); arInput.type='text'; arInput.className='nameInput'; arInput.value = pref.ar || nameMap.get(i)?.ar || g.ar || ''; arInput.setAttribute('data-index', String(i)); arInput.setAttribute('data-lang','ar'); tdArLab.appendChild(arInput);
-      [tdChk,tdEnLab,tdArLab].forEach(td=>{ td.style.verticalAlign='middle'; });
-      tr.appendChild(tdIdx); tr.appendChild(tdId); tr.appendChild(tdEn); tr.appendChild(tdAr); tr.appendChild(tdChk); tr.appendChild(tdEnLab); tr.appendChild(tdArLab);
+      [tdChk].forEach(td=>{ td.style.verticalAlign='middle'; });
+      tr.appendChild(tdId); tr.appendChild(tdEn); tr.appendChild(tdAr); tr.appendChild(tdGEn); tr.appendChild(tdGAr); tr.appendChild(tdChk);
       tbody.appendChild(tr);
     });
     table.appendChild(tbody); nodesEl.appendChild(table);
@@ -80,11 +82,19 @@
   async function init(){
     const groups = loadGroups();
     const names = loadGroupNames();
+    allGroups = groups;
+    nameMapCache = new Map(); (names||[]).forEach(n=>nameMapCache.set(n.index, n));
     if (!groups.length){ setStatus('No groups found. Go back and confirm groups first.'); return; }
     setMeta(`${groups.length} group(s)`);
-    const suggestions = await suggestNodes(groups, names);
-    setStatus(suggestions.length ? 'LLM suggested nodes. Review and edit.' : 'Select which groups are nodes.');
-    renderTable(groups, suggestions);
+    const saved = loadSavedNodes();
+    if (Array.isArray(saved) && saved.length){
+      setStatus('Using previously saved node selections.');
+      renderTable(groups, saved);
+    } else {
+      const suggestions = await suggestNodes(groups, names);
+      setStatus(suggestions.length ? 'LLM suggested nodes. Review and edit.' : 'Select which groups are nodes.');
+      renderTable(groups, suggestions);
+    }
   }
 
   saveBtn.addEventListener('click', () => {
@@ -95,8 +105,9 @@
         if (idx === 0) return; // header
         const i = idx-1;
         const chk = tr.querySelector('input.isNodeChk');
-        const en = tr.querySelector('input.nameInput[data-lang="en"]')?.value?.trim() || '';
-        const ar = tr.querySelector('input.nameInput[data-lang="ar"]')?.value?.trim() || '';
+        const nm = nameMapCache.get(i);
+        const en = (nm?.en || allGroups[i]?.en || '').trim();
+        const ar = (nm?.ar || allGroups[i]?.ar || '').trim();
         result.push({ index: i, isNode: !!(chk && chk.checked), en, ar });
       });
       sessionStorage.setItem('nodesDefinition', JSON.stringify(result));
@@ -108,6 +119,16 @@
       setStatus('Failed to save nodes.');
     }
   });
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      try {
+        const target = encodeURIComponent('mapper/datagrouping/naming.html');
+        const inMaster = !!document.querySelector('.layout') || !!document.getElementById('content');
+        if (inMaster) window.location.hash = '#/' + target; else window.location.href = '/Index.html#/' + target;
+      } catch (e) { /* noop */ }
+    });
+  }
 
   init();
 })();

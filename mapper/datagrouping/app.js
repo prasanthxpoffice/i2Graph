@@ -5,16 +5,15 @@
   const reuploadInput = document.getElementById('reuploadInput');
   const groupControls = document.getElementById('groupControls');
   const addGroupBtn = document.getElementById('addGroupBtn');
-  const applyBtn = document.getElementById('applyBtn');
   const confirmBtn = document.getElementById('confirmBtn');
   const groupList = document.getElementById('groupList');
-  const groupedDiv = document.getElementById('groupedTable');
   const ungroupedMsg = document.getElementById('ungroupedMsg');
   // Removed page-local spinner; relying on global Activity spinner
   const llmBadge = document.getElementById('llmBadge');
 
   let headers = [];
   let rows = [];
+  const loadSavedGroups = () => { try { return JSON.parse(sessionStorage.getItem('groupingDefinition')||'[]'); } catch { return []; } };
 
   function setStatus(msg) { statusEl.textContent = msg || ''; }
   function setMeta(msg) { metaEl.textContent = msg || ''; }
@@ -22,7 +21,6 @@
   function setLoading(loading) {
     try {
       if (addGroupBtn) addGroupBtn.disabled = !!loading;
-      if (applyBtn) applyBtn.disabled = !!loading;
       if (confirmBtn) confirmBtn.disabled = !!loading;
       if (loading) {
         statusEl.textContent = 'Suggesting groups from headers…';
@@ -48,41 +46,7 @@
     }
   }
 
-  function renderTable(el, headers, rows, limit) {
-    const max = Math.min(limit || rows.length, rows.length);
-    const table = document.createElement('table');
-    table.style.width = '100%';
-    table.style.borderCollapse = 'collapse';
-    table.style.fontSize = '14px';
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    headers.forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h;
-      th.style.textAlign = 'left';
-      th.style.borderBottom = '1px solid #ddd';
-      th.style.padding = '4px 6px';
-      trh.appendChild(th);
-    });
-    thead.appendChild(trh);
-    table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    for (let i = 0; i < max; i++) {
-      const tr = document.createElement('tr');
-      headers.forEach(h => {
-        const td = document.createElement('td');
-        const v = rows[i]?.[h];
-        td.textContent = v == null ? '' : String(v);
-        td.style.padding = '4px 6px';
-        td.style.borderBottom = '1px solid #f0f0f0';
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    }
-    table.appendChild(tbody);
-    el.innerHTML = '';
-    el.appendChild(table);
-  }
+  // Removed preview table rendering (legacy Apply Grouping UI)
 
   function distinct(arr) { return Array.from(new Set(arr)); }
   function createOption(value, selected, disabled) {
@@ -239,13 +203,24 @@
       if (!headers.length) throw new Error('Could not detect headers. Ensure file has a header row.');
       setMeta(`Detected ${headers.length} columns, ${rows.length} rows`);
       groupControls.style.display = '';
+      // If user already confirmed groups earlier, reuse them and skip LLM
+      const savedGroups = loadSavedGroups();
+      groupList.innerHTML = '';
+      if (Array.isArray(savedGroups) && savedGroups.length){
+        setStatus('Using previously saved groups.');
+        savedGroups.forEach(g => groupList.appendChild(buildGroupRow(g)));
+        if (ungroupedMsg) { ungroupedMsg.style.display = 'none'; ungroupedMsg.textContent = ''; }
+        updateAllOptionLocks();
+        setLoading(false);
+        return;
+      }
+
       // Ask LLM for groups from headers only
       setLoading(true);
       const result = await suggestGroups(headers, {});
       const llmGroups = Array.isArray(result) ? result : (Array.isArray(result.groups) ? result.groups : []);
       const reason = Array.isArray(result) ? null : (result && result.reason) || null;
       let ungrouped = Array.isArray(result && result.ungrouped) ? result.ungrouped : [];
-      groupList.innerHTML = '';
       if (llmGroups.length) {
         setStatus('LLM proposed groups. Review and adjust.');
         llmGroups.forEach(g => groupList.appendChild(buildGroupRow(g)));
@@ -306,43 +281,7 @@
 
   // No hash logic required; IDs must come from a selected column
 
-  applyBtn.addEventListener('click', () => {
-    const groups = Array.from(groupList.children).map(r => r.getValue());
-    // Validate
-    const used = new Set();
-    for (const g of groups) {
-      if (!g.en || !g.ar) { setStatus('Each group needs EN and AR.'); return; }
-      const cols = [g.en, g.ar];
-      if (g.idStrategy === 'column') {
-        if (!g.id) { setStatus('ID column missing or select Hash for ID.'); return; }
-        cols.push(g.id);
-      }
-      // Only check unique columns from this group against previously used ones
-      const uniqueInGroup = Array.from(new Set(cols));
-      for (const c of uniqueInGroup) {
-        if (used.has(c)) { setStatus('Columns must not be reused across groups.'); return; }
-      }
-      uniqueInGroup.forEach(c => used.add(c));
-    }
-
-    // Build grouped views
-    groupedDiv.innerHTML = '';
-    groups.forEach((g, idx) => {
-      const section = document.createElement('div'); section.style.marginBottom = '16px';
-      const title = document.createElement('div'); title.textContent = `Group ${idx+1}`; title.style.fontWeight='600'; title.style.margin='6px 0'; section.appendChild(title);
-      const tableRows = rows.map(r => {
-        const EN = r[g.en];
-        const AR = r[g.ar] ?? EN;
-        const ID = r[g.id];
-        return { ID, EN, AR };
-      });
-      renderTable(section, ['ID','EN','AR'], tableRows, 50);
-      groupedDiv.appendChild(section);
-    });
-    document.getElementById('grouped').style.display = '';
-    setStatus('Applied grouping. Review results below.');
-    if (confirmBtn) confirmBtn.disabled = false;
-  });
+  // Removed Apply Grouping button and preview; proceed directly to Confirm when ready
 
   if (confirmBtn) {
     confirmBtn.addEventListener('click', () => {
