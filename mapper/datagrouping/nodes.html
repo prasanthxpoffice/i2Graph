@@ -11,7 +11,6 @@
       table { width:100%; border-collapse: collapse; font-size:14px; }
       th { text-align:left; border-bottom:1px solid #ddd; padding:6px 8px; }
       td { border-bottom:1px solid #f0f0f0; padding:6px 8px; }
-      .nameInput { min-width: 200px; padding:4px 8px; border:1px solid #d1d5db; border-radius:4px; }
     </style>
   </head>
   <body>
@@ -19,7 +18,7 @@
       <header>
         <div class="controls">
           <strong>Select Nodes</strong>
-          <span class="hint">Choose which groups become Neo4j nodes. Edit EN/AR labels.</span>
+          <span class="hint">Choose which groups become Neo4j nodes. Labels use group names.</span>
         </div>
         <div class="stats">
           <div id="meta">Loading…</div>
@@ -33,6 +32,7 @@
       <section id="nodes" style="margin-top:8px;"></section>
 
       <div class="controls" style="margin-top:12px; gap:8px;">
+        <button id="prevToNamingBtn" class="pill">Previous Step</button>
         <button id="saveNodesBtn" class="pill">Confirm Nodes</button>
       </div>
     </div>

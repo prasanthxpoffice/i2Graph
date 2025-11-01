@@ -48,7 +48,6 @@
 
   // Removed preview table rendering (legacy Apply Grouping UI)
 
-  function distinct(arr) { return Array.from(new Set(arr)); }
   function createOption(value, selected, disabled) {
     const opt = document.createElement('option');
     opt.value = value;
@@ -203,10 +202,11 @@
       if (!headers.length) throw new Error('Could not detect headers. Ensure file has a header row.');
       setMeta(`Detected ${headers.length} columns, ${rows.length} rows`);
       groupControls.style.display = '';
-      // If user already confirmed groups earlier, reuse them and skip LLM
+      // If LLM already called for this step and user has saved groups, reuse them; otherwise call LLM
+      const done = sessionStorage.getItem('llm_groups_done') === '1';
       const savedGroups = loadSavedGroups();
       groupList.innerHTML = '';
-      if (Array.isArray(savedGroups) && savedGroups.length){
+      if (done && Array.isArray(savedGroups) && savedGroups.length){
         setStatus('Using previously saved groups.');
         savedGroups.forEach(g => groupList.appendChild(buildGroupRow(g)));
         if (ungroupedMsg) { ungroupedMsg.style.display = 'none'; ungroupedMsg.textContent = ''; }
@@ -243,6 +243,7 @@
       }
       updateAllOptionLocks();
       setLoading(false);
+      try { sessionStorage.setItem('llm_groups_done', '1'); } catch {}
     } catch (e) {
       setStatus('Parse error: ' + (e?.message || e));
       setLoading(false);
@@ -269,11 +270,14 @@
     reader.onerror = () => setStatus('Failed to read CSV.');
     reader.onload = () => {
       const text = String(reader.result || '');
+      try { sessionStorage.clear(); } catch {}
       try { sessionStorage.setItem('uploadedCsvText', text); } catch {}
       parseCsvText(text);
     };
     reader.readAsText(f);
   });
+  // Ensure selecting the same file triggers change
+  reuploadInput.addEventListener('click', () => { try { reuploadInput.value = ''; } catch {} });
 
   addGroupBtn.addEventListener('click', () => { groupList.appendChild(buildGroupRow(null)); updateAllOptionLocks(); });
 

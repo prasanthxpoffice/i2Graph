@@ -14,8 +14,15 @@
         <h1>Mapper</h1>
         <span class="sub">Tools for preparing and loading data</span>
         <span class="hint">Use the sidebar to open a tool</span>
-        <div id="userBadge" style="margin-left:auto; padding:2px 8px; background:#eef; border-radius:10px; font-size:12px;">
+        <div id="userBadge" style="padding:2px 8px; background:#eef; border-radius:10px; font-size:12px;">
           User: <span id="userId">1001</span>
+        </div>
+        <div id="langSwitcher" style="padding:2px 8px; background:#eef; border-radius:10px; font-size:12px; margin-left:8px; display:flex; align-items:center; gap:6px;">
+          <label for="langSelect">Lang</label>
+          <select id="langSelect">
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+          </select>
         </div>
       </header>
       <aside>
@@ -46,6 +53,27 @@
         const nav = document.getElementById('nav');
         // Hard-coded user id for now (used by DB API)
         window.CURRENT_USER_ID = 1001;
+        const langSelect = document.getElementById('langSelect');
+
+        function applyLang(lang){
+          const l = (lang === 'ar') ? 'ar' : 'en';
+          document.documentElement.setAttribute('lang', l);
+          document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
+          try { localStorage.setItem('lang', l); } catch(_) {}
+          if (langSelect && langSelect.value !== l) langSelect.value = l;
+          try { window.dispatchEvent(new CustomEvent('lang:changed', { detail: { lang: l, dir: (l==='ar'?'rtl':'ltr') } })); } catch(_) {}
+        }
+
+        function initLang(){
+          let saved = 'en';
+          try { saved = localStorage.getItem('lang') || 'en'; } catch(_) {}
+          applyLang(saved);
+          if (langSelect){
+            langSelect.addEventListener('change', (e)=>{
+              applyLang(e.target.value);
+            });
+          }
+        }
 
         function setActiveByUrl(url){
           nav.querySelectorAll('.link').forEach(a => a.classList.toggle('active', a.getAttribute('data-url') === url));
@@ -100,6 +128,8 @@
         });
 
         function initial(){
+          // Apply language and direction first so layout is correct immediately
+          initLang();
           // Upgrade links to SPA behavior
           nav.querySelectorAll('a.link').forEach(a => { const href=a.getAttribute('href'); if (href){ a.setAttribute('data-url', href); a.removeAttribute('href'); }});
           const hash = location.hash && location.hash.startsWith('#/') ? decodeURIComponent(location.hash.slice(2)) : (nav.querySelector('a.link')?.getAttribute('data-url') || 'mapper/datauploader/index.html');

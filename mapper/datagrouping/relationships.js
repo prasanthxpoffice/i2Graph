@@ -6,6 +6,7 @@
   const saveBtn = document.getElementById('saveRelsBtn');
   const prevBtn = document.getElementById('prevToNodesBtn');
   const addRelBtn = document.getElementById('addRelBtn');
+  const suggestMoreBtn = document.getElementById('suggestMoreBtn');
   let currentNodes = [];
   let master = null;
 
@@ -94,7 +95,7 @@
     } catch {}
   }
 
-  async function suggestRelationships(nodes){
+  async function suggestRelationships(nodes, temperature){
     // Ask LLM to propose relationships between nodes with EN/AR and direction
     try { if (!window.LLM || !window.LLM.getProvider) throw new Error('LLM missing'); } catch(e){ return []; }
     try {
@@ -111,7 +112,7 @@
       try { window.Activity && window.Activity.start(); } catch(_) {}
       const resp = await fetch(apiBase + '/chat/completions', {
         method: 'POST', headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ messages: [ {role:'system', content: sys}, {role:'user', content: user} ], temperature: 0.1 })
+        body: JSON.stringify({ messages: [ {role:'system', content: sys}, {role:'user', content: user} ], temperature: (typeof temperature === 'number' ? temperature : 0.1) })
       });
       const raw = await resp.text();
       let data; try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
@@ -144,7 +145,6 @@
       }
     }
 
-    const nodesByIndex = new Map(nodes.map(n=>[n.index,n]));
     rels.forEach((r, idx) => { tbody.appendChild(buildRelRow(r, nodes, idx)); });
     table.appendChild(tbody); relsEl.appendChild(table);
     updateDirSelects();
@@ -158,13 +158,15 @@
     if (!nodes.length){ setStatus('No nodes selected. Go back and confirm nodes.'); return; }
     setMeta(`${nodes.length} node(s)`);
     const savedR = loadSavedRels();
-    if (Array.isArray(savedR) && savedR.length){
+    const done = sessionStorage.getItem('llm_rels_done') === '1';
+    if (done && Array.isArray(savedR) && savedR.length){
       setStatus('Using previously saved relationships.');
       renderTable(nodes, savedR);
     } else {
-      const rels = await suggestRelationships(nodes);
+      const rels = await suggestRelationships(nodes, 0.1);
       setStatus(rels.length ? 'LLM suggested relationships. Review and edit.' : 'Define relationships between nodes.');
       renderTable(nodes, rels);
+      try { sessionStorage.setItem('llm_rels_done', '1'); } catch {}
     }
   }
 
@@ -191,6 +193,33 @@
   init();
   window.addEventListener('lang:changed', () => { updateDirSelects(); });
   window.addEventListener('lang:changed', () => { updateNodeSelectLabels(); });
+  if (suggestMoreBtn) {
+    suggestMoreBtn.addEventListener('click', async () => {
+      try {
+        const tbody = relsEl.querySelector('tbody'); if (!tbody) return;
+        const nodes = currentNodes || activeNodes();
+        // Build a set of existing relation keys
+        const existingRows = Array.from(tbody.querySelectorAll('tr'));
+        const existingPairs = new Set(existingRows.map(tr => {
+          const from = String(tr.querySelector('select.nodeSelFrom')?.value||'');
+          const to = String(tr.querySelector('select.nodeSelTo')?.value||'');
+          return `${from}|${to}`;
+        }));
+        // Add randomness: request with a higher, slightly jittered temperature
+        const t = 0.6 + Math.random() * 0.35; // 0.60 - 0.95
+        const suggestions = await suggestRelationships(nodes, t);
+        let appended = 0;
+        suggestions.forEach(r => {
+          const pair = `${r.from}|${r.to}`;
+          if (existingPairs.has(pair)) return;
+          const row = buildRelRow({ include: true, from: r.from, to: r.to, en: r.en||'', ar: r.ar||'', dir: r.dir||'out' }, nodes, tbody.children.length);
+          tbody.appendChild(row); existingPairs.add(pair); appended++;
+        });
+        updateDirSelects(); updateNodeSelectLabels();
+        setStatus(appended ? `Appended ${appended} new suggestion(s).` : 'No more suggestions available.');
+      } catch (e) { setStatus('Failed to suggest more relationships.'); }
+    });
+  }
   if (addRelBtn) {
     addRelBtn.addEventListener('click', () => {
       try {

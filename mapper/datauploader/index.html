@@ -1,12 +1,18 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CSV Data Uploader</title>
-    
   </head>
   <body>
+    <script>
+      (function () {
+        try {
+          sessionStorage.clear();
+        } catch (e) {}
+      })();
+    </script>
     <div class="wrap">
       <header>
         <div class="controls">
@@ -14,10 +20,11 @@
             <span>CSV file</span>
             <input id="fileInput" type="file" accept=".csv,text/csv" />
           </label>
-          <label class="pill">Delimiter
+          <label class="pill"
+            >Delimiter
             <select id="delimiter">
               <option value="auto" selected>Auto</option>
-              <option value="," >Comma (,)</option>
+              <option value=",">Comma (,)</option>
               <option value="\t">Tab (\t)</option>
               <option value=";">Semicolon (;)</option>
               <option value="|">Pipe (|)</option>
@@ -28,13 +35,14 @@
             <span>Header row</span>
           </label>
           <button id="nextStepBtn" class="pill" disabled>Next Step</button>
-          <span class="hint">Large files are parsed in a web worker and shown in jqGrid with pagination and header search.</span>
         </div>
         <div class="stats">
           <div id="meta">Waiting for file…</div>
         </div>
       </header>
-      <div class="progress" id="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
+      <div class="progress" id="progress" aria-hidden="true">
+        <div class="bar" id="progressBar"></div>
+      </div>
       <div class="status" id="status" aria-live="polite"></div>
       <div class="status" id="validationError" aria-live="assertive"></div>
       <!-- jqGrid table + pager (legacy grid removed) -->
@@ -45,4 +53,4 @@
     </div>
     <script src="app.js"></script>
   </body>
-  </html>
+</html>

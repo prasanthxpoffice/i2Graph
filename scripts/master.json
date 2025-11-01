@@ -7,5 +7,10 @@
     "AET223": { "label": "AET223 Node", "color": "#8b5cf6", "borderColor": "#7c3aed" },
     "AET332": { "label": "AET332 Node", "color": "#ef4444", "borderColor": "#dc2626" },
     "AET144": { "label": "AET144 Node", "color": "#06b6d4", "borderColor": "#0891b2" }
+  },
+  "relationshipDirections": {
+    "out": { "en": "outward (→)", "ar": "خارجة (→)" },
+    "in":  { "en": "inward (←)",  "ar": "داخلة (←)" },
+    "both":{ "en": "both (↔)",   "ar": "كلاهما (↔)" }
   }
 }

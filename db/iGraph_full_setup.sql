@@ -205,7 +205,8 @@ BEGIN
                ISNULL(NULLIF(j.TypeKey,''), NULLIF(j.NameEn,'')) AS TypeKey,
                j.NameEn,
                j.NameAr,
-               CASE WHEN j.Dir IN ('out','in','both') THEN j.Dir ELSE 'out' END AS Direction
+               CASE WHEN j.Dir IN ('out','in','both') THEN j.Dir ELSE 'out' END AS Direction,
+               ISNULL(j.IncludeFlg, 1) AS Include
         FROM j
         JOIN nodes nf ON nf.NodeIndex = j.FromIndex
         JOIN nodes nt ON nt.NodeIndex = j.ToIndex
@@ -214,9 +215,9 @@ BEGIN
       MERGE iGraph.RelationshipDef AS t
       USING candidates AS s
       ON t.FromNodeId=s.FromNodeId AND t.ToNodeId=s.ToNodeId
-      WHEN MATCHED THEN UPDATE SET t.TypeKey=s.TypeKey, t.NameEn=s.NameEn, t.NameAr=s.NameAr, t.Direction=s.Direction, t.Include=1
+      WHEN MATCHED THEN UPDATE SET t.TypeKey=s.TypeKey, t.NameEn=s.NameEn, t.NameAr=s.NameAr, t.Direction=s.Direction, t.Include=s.Include
       WHEN NOT MATCHED THEN INSERT(FromNodeId, ToNodeId, TypeKey, NameEn, NameAr, Direction, Include)
-                           VALUES(s.FromNodeId, s.ToNodeId, s.TypeKey, s.NameEn, s.NameAr, s.Direction, 1)
+                           VALUES(s.FromNodeId, s.ToNodeId, s.TypeKey, s.NameEn, s.NameAr, s.Direction, s.Include)
       WHEN NOT MATCHED BY SOURCE AND t.FromNodeId IN (SELECT NodeId FROM nodes) AND t.ToNodeId IN (SELECT NodeId FROM nodes) THEN DELETE;
 
     COMMIT TRAN;

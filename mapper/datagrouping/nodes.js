@@ -87,13 +87,15 @@
     if (!groups.length){ setStatus('No groups found. Go back and confirm groups first.'); return; }
     setMeta(`${groups.length} group(s)`);
     const saved = loadSavedNodes();
-    if (Array.isArray(saved) && saved.length){
+    const done = sessionStorage.getItem('llm_nodes_done') === '1';
+    if (done && Array.isArray(saved) && saved.length){
       setStatus('Using previously saved node selections.');
       renderTable(groups, saved);
     } else {
       const suggestions = await suggestNodes(groups, names);
       setStatus(suggestions.length ? 'LLM suggested nodes. Review and edit.' : 'Select which groups are nodes.');
       renderTable(groups, suggestions);
+      try { sessionStorage.setItem('llm_nodes_done', '1'); } catch {}
     }
   }
 

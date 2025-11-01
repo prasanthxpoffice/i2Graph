@@ -19,6 +19,11 @@ main { position: relative; overflow: hidden; }
 #content { position: absolute; inset: 0; border: 0; width: 100%; height: 100%; background: #ffffff; overflow: auto; }
 .hint { color: var(--muted); font-size: 12px; margin-left: auto; }
 
+/* RTL adjustments */
+/* No RTL-specific grid changes; direction is controlled by html[dir] only */
+
+/* No explicit LTR overrides; default layout applies */
+
 /* Global centered activity spinner */
 @keyframes llm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 #globalSpinner {
@@ -51,3 +56,14 @@ main { position: relative; overflow: hidden; }
 .wrap .bar { height: 100%; width: 0%; background: linear-gradient(90deg, #16a34a, #22c55e); transition: width .15s linear; }
 #jqgrid-container { flex: 1; display: flex; flex-direction: column; overflow: auto; min-height: 360px; }
 #jqgrid { width: 100%; }
+
+/* jqGrid RTL support (CSS-only, no JS changes) */
+html[dir="rtl"] .ui-jqgrid { direction: rtl; }
+html[dir="rtl"] .ui-jqgrid .ui-jqgrid-view,
+html[dir="rtl"] .ui-jqgrid .ui-jqgrid-hdiv,
+html[dir="rtl"] .ui-jqgrid .ui-jqgrid-bdiv { direction: rtl; }
+html[dir="rtl"] .ui-jqgrid .ui-jqgrid-htable th div { text-align: center; }
+html[dir="rtl"] .ui-jqgrid tr.jqgrow > td { text-align: right; }
+html[dir="rtl"] .ui-jqgrid .ui-jqgrid-pager { direction: rtl; }
+/* Center-align jqGrid headers (both LTR and RTL) */
+.ui-jqgrid .ui-jqgrid-htable th div { text-align: center; }

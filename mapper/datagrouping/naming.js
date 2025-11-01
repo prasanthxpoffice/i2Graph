@@ -94,7 +94,8 @@
       head.split(',').forEach(h => headers.push(String(h||'').trim()));
     } catch {}
     const saved = loadSavedNames();
-    if (Array.isArray(saved) && saved.length){
+    const done = sessionStorage.getItem('llm_names_done') === '1';
+    if (done && Array.isArray(saved) && saved.length){
       setStatus('Using previously saved group names.');
       namingEl.style.display='';
       renderTable(groups, saved);
@@ -105,6 +106,7 @@
       setStatus(names.length ? 'LLM suggested names. Review and edit.' : 'No name suggestions from LLM. Provide names manually.');
       namingEl.style.display='';
       renderTable(groups, names || []);
+      try { sessionStorage.setItem('llm_names_done', '1'); } catch {}
     }
   }
 

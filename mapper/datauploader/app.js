@@ -21,6 +21,9 @@
   let headers = [];
   let currentFile = null;
   let headersAreUnique = false;
+  let clearedOnGrid = false; // ensure sessionStorage is cleared once when grid initializes
+
+  // no-op helpers removed; we now clear sessionStorage fully on upload
 
   function resetGrid() {
     headers = [];
@@ -77,6 +80,11 @@
 
   function ensureJqGrid(headersForCols) {
     if (!jqReady) { setStatus('jqGrid library not loaded.'); return; }
+    // Clear any prior session state the first time the grid initializes
+    if (!clearedOnGrid) {
+      try { sessionStorage.clear(); } catch {}
+      clearedOnGrid = true;
+    }
     const colModel = createColModelFromHeaders(headersForCols);
     try { jq(jqGridSel).jqGrid('GridUnload'); } catch (e) { /* ignore */ }
     jq(jqGridSel).jqGrid({
@@ -158,6 +166,7 @@
   
 
   function startWorkerParse(file, delimiter, hasHeader) {
+    try { sessionStorage.clear(); } catch {}
     if (worker) { worker.terminate(); worker = null; }
     try {
       worker = new Worker('/mapper/datauploader/csvWorker.js');
@@ -219,6 +228,7 @@
   });
 
   fileInput.addEventListener('change', () => {
+    try { sessionStorage.clear(); } catch {}
     resetGrid();
     const f = fileInput.files && fileInput.files[0];
     if (!f) { setMeta('Waiting for file…'); setStatus(''); return; }
@@ -226,6 +236,8 @@
     const hasHeader = !!hasHeaderChk.checked;
     startWorkerParse(f, delimiter, hasHeader);
   });
+  // Ensure selecting the same file still triggers change
+  fileInput.addEventListener('click', () => { try { fileInput.value = ''; } catch {} });
   // Secondary listener to track file and control Next Step state
   fileInput.addEventListener('change', () => {
     currentFile = (fileInput.files && fileInput.files[0]) || null;
@@ -242,7 +254,9 @@
         reader.onload = () => {
           try {
             const text = String(reader.result || '');
+            try { sessionStorage.clear(); } catch {}
             sessionStorage.setItem('uploadedCsvText', text);
+            try { ['llm_groups_done','llm_names_done','llm_nodes_done','llm_rels_done'].forEach(k => sessionStorage.removeItem(k)); } catch {}
             // Route within master layout if present; otherwise open master with hash
             var target = encodeURIComponent('mapper/datagrouping/index.html');
             var isInMaster = !!document.querySelector('.layout') || !!document.getElementById('content');
