@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple Graph Prototype (Checkpoint 9)</title>
     <!-- Common/global styles if needed -->
-    
+
     <link rel="stylesheet" href="style.css" />
 
     <!-- Tailwind CSS (vendored) -->
-    <script src="/libraries/tailwind/tailwindcdn.min.js"></script>
+    <script src="../libraries/tailwind/tailwindcdn.min.js"></script>
 
     <!-- Cytoscape.js core + layouts/extensions (order matters) -->
-    <script src="/libraries/cytoscape/cytoscape.min.js"></script>
-    <script src="/libraries/dagre/dagre.min.js"></script>
-    <script src="/libraries/cytoscape-dagre/cytoscape-dagre.js"></script>
-    <script src="/libraries/klay/klay.js"></script>
-    <script src="/libraries/cytoscape-klay/cytoscape-klay.js"></script>
-    <script src="/libraries/cytoscape-cxtmenu/cytoscape-cxtmenu.js"></script>
+    <script src="../libraries/cytoscape/cytoscape.min.js?v=3.24.0"></script>
+    <script src="../libraries/dagre/dagre.min.js"></script>
+    <script src="../libraries/cytoscape-dagre/cytoscape-dagre.js"></script>
+    <script src="../libraries/klay/klay.js"></script>
+    <script src="../libraries/cytoscape-klay/cytoscape-klay.js"></script>
+    <script src="../libraries/cytoscape-cxtmenu/cytoscape-cxtmenu.js"></script>
 
     <!-- App + data sources -->
-    <script src="/scripts/fakeapi.js"></script>
+    <script src="../scripts/fakeapi.js"></script>
     <script src="js/config.js"></script>
     <script src="js/transform.js"></script>
     <script src="js/indexes.js"></script>
@@ -81,7 +81,9 @@
           <!-- Filter Container -->
           <div id="filter-container" class="space-y-2">
             <!-- Initial Filter Group -->
-            <div class="filter-group p-2 border border-gray-200 rounded-md space-y-2 relative">
+            <div
+              class="filter-group p-2 border border-gray-200 rounded-md space-y-2 relative"
+            >
               <div class="flex space-x-2">
                 <input
                   type="text"
@@ -107,8 +109,20 @@
                   <option value="contains">Contains</option>
                 </select>
               </div>
-              <input type="text" name="values" placeholder="Values (comma-sep)" value="1" class="w-full p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500" />
-              <button type="button" class="remove-filter-btn absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold" title="Remove this filter">&times;</button>
+              <input
+                type="text"
+                name="values"
+                placeholder="Values (comma-sep)"
+                value="1"
+                class="w-full p-1.5 border border-gray-300 rounded-md text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+              />
+              <button
+                type="button"
+                class="remove-filter-btn absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+                title="Remove this filter"
+              >
+                &times;
+              </button>
             </div>
           </div>
 
@@ -130,7 +144,9 @@
 
           <!-- Depth (moved below Search button) -->
           <div class="mt-3">
-            <label for="depth" class="block text-sm font-medium text-gray-700">Search Depth</label>
+            <label for="depth" class="block text-sm font-medium text-gray-700"
+              >Search Depth</label
+            >
             <input
               type="number"
               id="depth"
@@ -144,7 +160,11 @@
 
           <!-- Batch Size (applies to search and expansion) -->
           <div class="mt-3">
-            <label for="batch-size" class="block text-sm font-medium text-gray-700">Batch Size</label>
+            <label
+              for="batch-size"
+              class="block text-sm font-medium text-gray-700"
+              >Batch Size</label
+            >
             <input
               type="number"
               id="batch-size"
@@ -323,6 +343,5 @@
     </div>
 
     <!-- Main Application Logic -->
-    
   </body>
 </html>
