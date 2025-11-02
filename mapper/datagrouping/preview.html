@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preview (jqGrid)</title>
+
+    <style>
+      .statusRow { display:flex; align-items:center; gap:8px; }
+      #jqgrid-container { margin-top: 12px; }
+      #jqgrid { width: 100%; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="controls">
+          <strong>Preview</strong>
+          <span class="hint">CSV preview in jqGrid based on your settings.</span>
+        </div>
+        <div class="stats">
+          <div id="meta">Preparing preview…</div>
+        </div>
+      </header>
+
+      <div class="statusRow">
+        <div class="status" id="status" aria-live="polite"></div>
+        <button id="backBtn" class="pill">Back</button>
+      </div>
+
+      <section id="gridSec" style="margin-top:8px;">
+        <div id="jqgrid-container">
+          <table id="jqgrid"></table>
+          <div id="jqgridPager"></div>
+        </div>
+      </section>
+    </div>
+
+    <script src="/scripts/global-activity.js"></script>
+    <script src="./preview.js"></script>
+  </body>
+  </html>
+

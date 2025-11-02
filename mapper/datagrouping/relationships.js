@@ -7,6 +7,7 @@
   const prevBtn = document.getElementById('prevToNodesBtn');
   const addRelBtn = document.getElementById('addRelBtn');
   const suggestMoreBtn = document.getElementById('suggestMoreBtn');
+  const previewBtn = document.getElementById('previewBtn');
   let currentNodes = [];
   let master = null;
 
@@ -235,6 +236,13 @@
   if (prevBtn) {
     prevBtn.addEventListener('click', () => {
       const target = encodeURIComponent('mapper/datagrouping/nodes.html');
+      const inMaster = !!document.querySelector('.layout') || !!document.getElementById('content');
+      if (inMaster) window.location.hash = '#/' + target; else window.location.href = '/Index.html#/' + target;
+    });
+  }
+  if (previewBtn) {
+    previewBtn.addEventListener('click', () => {
+      const target = encodeURIComponent('mapper/datagrouping/preview.html');
       const inMaster = !!document.querySelector('.layout') || !!document.getElementById('content');
       if (inMaster) window.location.hash = '#/' + target; else window.location.href = '/Index.html#/' + target;
     });
